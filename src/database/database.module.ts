@@ -12,6 +12,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
                 const dbPort = Number(configService.get<string>('DB_PORT') ?? 3306);
                 const dbUsername = configService.get<string>('DB_USERNAME') ?? configService.get<string>('DB_USER');
                 const dbDatabase = configService.get<string>('DB_DATABASE') ?? configService.get<string>('DB_NAME');
+                const nodeEnv = configService.get<string>('NODE_ENV') ?? 'development';
 
                 return {
                     type: 'mysql',
@@ -21,8 +22,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
                     password: configService.get<string>('DB_PASSWORD'),
                     database: dbDatabase,
                     autoLoadEntities: true,
-                    synchronize: false,
-                    logging: false,
+                    // En desarrollo, sincronizar automáticamente. En producción, usar migraciones
+                    synchronize: nodeEnv === 'development',
+                    logging: nodeEnv === 'development',
                 };
             }
         })
