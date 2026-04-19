@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { User } from '../users/user.entity';
+import { UsersService } from '../modules/users/users.service';
+import { User } from '../modules/users/user.entity';
 import { Role } from '../common/enums/role.enum';
-import { CreateUserDto } from '../users/dto/create-user.dto';
+import { CreateUserDto } from '../dtos/dto-users/create-user.dto';
 
 export interface LoginRequest {
   email: string;

@@ -4,19 +4,66 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiConflictResponse,
+  ApiBadRequestResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt.guard';
-import { User } from '../users/user.entity';
+import { User } from '../modules/users/user.entity';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @ApiOperation({ summary: 'Registrar usuario' })
-  @ApiResponse({ status: 201, description: 'Usuario registrado' })
-  @ApiResponse({ status: 409, description: 'Correo ya registrado' })
+  @ApiOperation({
+    summary: '📝 Registrar nuevo usuario',
+    description: 'Permite que un nuevo usuario se registre en el sistema. La contraseña se encriptará automáticamente.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['email', 'nombre', 'contraseña'],
+      properties: {
+        email: {
+          type: 'string',
+          format: 'email',
+          example: 'usuario@example.com',
+          description: 'Email único del usuario',
+        },
+        nombre: {
+          type: 'string',
+          example: 'Juan Pérez',
+          description: 'Nombre completo del usuario (mínimo 2 caracteres)',
+        },
+        contraseña: {
+          type: 'string',
+          format: 'password',
+          example: 'SecurePassword123',
+          description: 'Contraseña (mínimo 6 caracteres)',
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({
+    description: 'Usuario registrado exitosamente',
+    schema: {
+      example: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        email: 'usuario@example.com',
+        nombre: 'Juan Pérez',
+        rol: 'desarrollador',
+        activo: true,
+        fechaCreacion: '2025-04-19T10:30:00.000Z',
+      },
+    },
+  })
+  @ApiConflictResponse({ description: 'El correo electrónico ya está registrado' })
+  @ApiBadRequestResponse({ description: 'Datos de entrada inválidos' })
   @Post('registro')
   @HttpCode(201)
   async registro(
@@ -27,9 +74,47 @@ export class AuthController {
     return await this.authService.registro(email, nombre, contraseña);
   }
 
-  @ApiOperation({ summary: 'Iniciar sesion' })
-  @ApiResponse({ status: 200, description: 'Login exitoso con JWT' })
-  @ApiResponse({ status: 401, description: 'Credenciales invalidas' })
+  @ApiOperation({
+    summary: '🔐 Iniciar sesión',
+    description: 'Valida las credenciales del usuario y genera un token JWT válido por 24 horas.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['email', 'contraseña'],
+      properties: {
+        email: {
+          type: 'string',
+          format: 'email',
+          example: 'usuario@example.com',
+          description: 'Email registrado del usuario',
+        },
+        contraseña: {
+          type: 'string',
+          format: 'password',
+          example: 'SecurePassword123',
+          description: 'Contraseña del usuario',
+        },
+      },
+    },
+  })
+  @ApiOkResponse({
+    description: 'Login exitoso. Token JWT generado',
+    schema: {
+      example: {
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        usuario: {
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          email: 'usuario@example.com',
+          nombre: 'Juan Pérez',
+          rol: 'admin',
+          activo: true,
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Credenciales inválidas o usuario inactivo' })
+  @ApiBadRequestResponse({ description: 'Email o contraseña faltante' })
   @Post('login')
   @HttpCode(200)
   async login(
@@ -39,10 +124,25 @@ export class AuthController {
     return await this.authService.login(email, contraseña);
   }
 
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Obtener perfil autenticado' })
-  @ApiResponse({ status: 200, description: 'Perfil del usuario autenticado' })
-  @ApiResponse({ status: 401, description: 'Token invalido o ausente' })
+  @ApiBearerAuth('Bearer')
+  @ApiOperation({
+    summary: '👤 Ver perfil propio',
+    description: 'Retorna la información del usuario autenticado actualmente.',
+  })
+  @ApiOkResponse({
+    description: 'Perfil del usuario autenticado',
+    schema: {
+      example: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        email: 'usuario@example.com',
+        nombre: 'Juan Pérez',
+        rol: 'admin',
+        activo: true,
+        fechaCreacion: '2025-04-19T10:30:00.000Z',
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Token inválido o ausente' })
   @Get('perfil')
   @UseGuards(JwtAuthGuard)
   async obtenerPerfil(@Request() req: any): Promise<Partial<User>> {
@@ -50,10 +150,20 @@ export class AuthController {
     return usuarioSinContraseña;
   }
 
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Validar token JWT' })
-  @ApiResponse({ status: 200, description: 'Token valido' })
-  @ApiResponse({ status: 401, description: 'Token invalido o ausente' })
+  @ApiBearerAuth('Bearer')
+  @ApiOperation({
+    summary: '✅ Validar token JWT',
+    description: 'Verifica que el token JWT proporcionado es válido y no ha expirado.',
+  })
+  @ApiOkResponse({
+    description: 'Token es válido',
+    schema: {
+      example: {
+        mensaje: 'Token válido',
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Token inválido o expirado' })
   @Get('validar-token')
   @UseGuards(JwtAuthGuard)
   async validarToken(): Promise<{ mensaje: string }> {
