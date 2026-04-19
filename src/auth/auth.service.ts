@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/user.entity';
 import { Role } from '../common/enums/role.enum';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 export interface LoginRequest {
   email: string;
@@ -22,7 +23,14 @@ export class AuthService {
   ) {}
 
   async registro(email: string, nombre: string, contraseña: string): Promise<Partial<User>> {
-    const usuario = await this.usersService.crear(email, nombre, contraseña, Role.DESARROLLADOR);
+    const createUserDto: CreateUserDto = {
+      email,
+      nombre,
+      password: contraseña,
+      rol: Role.DESARROLLADOR,
+    };
+
+    const usuario = await this.usersService.crear(createUserDto);
     const { contraseña: _, ...usuarioSinContraseña } = usuario;
     return usuarioSinContraseña;
   }

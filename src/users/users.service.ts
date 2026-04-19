@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 import { Role } from '../common/enums/role.enum';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -12,7 +14,9 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async crear(email: string, nombre: string, contraseña: string, rol: Role = Role.DESARROLLADOR): Promise<User> {
+  async crear(dto: CreateUserDto): Promise<User> {
+    const { email, nombre, password, rol = Role.DESARROLLADOR } = dto;
+
     // Validar que el email no exista
     const usuarioExistente = await this.usersRepository.findOne({ where: { email } });
     if (usuarioExistente) {
@@ -20,12 +24,12 @@ export class UsersService {
     }
 
     // Validar contraseña
-    if (!contraseña || contraseña.length < 6) {
+    if (!password || password.length < 6) {
       throw new BadRequestException('La contraseña debe tener al menos 6 caracteres');
     }
 
     // Encriptar la contraseña
-    const contraseñaEncriptada = await bcrypt.hash(contraseña, 10);
+    const contraseñaEncriptada = await bcrypt.hash(password, 10);
 
     // Crear y guardar el nuevo usuario
     const nuevoUsuario = this.usersRepository.create({
@@ -55,17 +59,31 @@ export class UsersService {
     return await this.usersRepository.find();
   }
 
-  async actualizar(id: string, datos: Partial<User>): Promise<User> {
+  async actualizar(id: string, datos: UpdateUserDto): Promise<User> {
     const usuario = await this.buscarPorId(id);
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    if (datos.contraseña) {
-      datos.contraseña = await bcrypt.hash(datos.contraseña, 10);
+    if (datos.email && datos.email !== usuario.email) {
+      const usuarioExistente = await this.usersRepository.findOne({ where: { email: datos.email } });
+      if (usuarioExistente) {
+        throw new ConflictException('El correo electrónico ya está registrado');
+      }
     }
 
-    Object.assign(usuario, datos);
+    const actualizacion: Partial<User> = {
+      email: datos.email,
+      nombre: datos.nombre,
+      rol: datos.rol,
+      activo: datos.activo,
+    };
+
+    if (datos.password) {
+      actualizacion.contraseña = await bcrypt.hash(datos.password, 10);
+    }
+
+    Object.assign(usuario, actualizacion);
     return await this.usersRepository.save(usuario);
   }
 
