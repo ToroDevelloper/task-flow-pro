@@ -31,11 +31,14 @@ async function bootstrap() {
         '2. **Iniciar sesión**: POST `/auth/login` (obtener token)\n' +
         '3. **Usar token**: Incluir en header `Authorization: Bearer <token>`\n' +
         '4. **Crear usuario**: POST `/users` (solo ADMIN)\n' +
-        '5. **Crear proyecto**: POST `/projects` (ADMIN y GERENTE)\n\n' +
+        '5. **Crear proyecto**: POST `/projects` (ADMIN y GERENTE)\n' +
+        '6. **Consultar proyecto**: GET `/projects/:id` (usuarios autenticados)\n' +
+        '7. **Actualizar proyecto**: PATCH `/projects/:id` (creador o ADMIN)\n' +
+        '8. **Eliminar proyecto**: DELETE `/projects/:id` (solo ADMIN)\n\n' +
         '## Roles y Permisos\n' +
-        '- **ADMIN**: Crear, actualizar, eliminar usuarios y proyectos\n' +
-        '- **GERENTE**: Listar usuarios, crear y actualizar proyectos\n' +
-        '- **DESARROLLADOR**: Ver perfil propio, listar proyectos',
+        '- **ADMIN**: Crear, actualizar y eliminar usuarios; crear, consultar, actualizar y eliminar proyectos\n' +
+        '- **GERENTE**: Listar usuarios; crear proyectos; consultar proyectos; actualizar solo los proyectos que creó\n' +
+        '- **DESARROLLADOR**: Ver perfil propio; listar proyectos; consultar proyectos; actualizar solo los proyectos que creó',
     )
     .setVersion('1.0.0')
     .setContact(

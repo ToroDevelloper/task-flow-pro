@@ -109,7 +109,7 @@ export class ProjectsController {
   @ApiOperation({
     summary: '✏️ Actualizar proyecto',
     description:
-      'Actualiza la información de un proyecto existente. Solo ADMIN y GERENTE pueden actualizar proyectos.',
+      'Actualiza la información de un proyecto existente. Solo el usuario creador del proyecto o un ADMIN pueden actualizarlo.',
   })
   @ApiParam({
     name: 'id',
@@ -124,17 +124,18 @@ export class ProjectsController {
   })
   @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
   @ApiForbiddenResponse({
-    description: 'Solo ADMIN y GERENTE pueden actualizar proyectos',
+    description:
+      'Solo el usuario creador del proyecto o un ADMIN pueden actualizarlo',
   })
   @ApiNotFoundResponse({ description: 'Proyecto no encontrado' })
   @ApiBadRequestResponse({ description: 'Fechas inválidas' })
-  @Roles(Role.ADMIN, Role.GERENTE)
   @Patch(':id')
   async actualizar(
     @Param('id') id: string,
     @Body() dto: UpdateProjectDto,
+    @Request() req: any,
   ): Promise<Project> {
-    return await this.projectsService.actualizar(id, dto);
+    return await this.projectsService.actualizar(id, dto, req.user.id, req.user.rol);
   }
 
   @ApiOperation({

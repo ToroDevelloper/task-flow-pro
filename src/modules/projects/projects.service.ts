@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,6 +10,7 @@ import { Project } from './project.entity';
 import { CreateProjectDto } from '../../dtos/dto-projects/create-project.dto';
 import { UpdateProjectDto } from '../../dtos/dto-projects/response-project.dto';
 import { UsersService } from '../users/users.service';
+import { Role } from '../../common/enums/role.enum';
 
 @Injectable()
 export class ProjectsService {
@@ -70,10 +72,21 @@ export class ProjectsService {
     return proyecto;
   }
 
-  async actualizar(id: string, datos: UpdateProjectDto): Promise<Project> {
+  async actualizar(
+    id: string,
+    datos: UpdateProjectDto,
+    actorId: string,
+    actorRole: Role,
+  ): Promise<Project> {
     const proyecto = await this.buscarPorId(id);
     if (!proyecto) {
       throw new NotFoundException('Proyecto no encontrado');
+    }
+
+    if (actorRole !== Role.ADMIN && proyecto.idUsuario !== actorId) {
+      throw new ForbiddenException(
+        'Solo el usuario creador del proyecto o un ADMIN pueden actualizarlo',
+      );
     }
 
     if (datos.fechaInicio && datos.fechaFin) {
