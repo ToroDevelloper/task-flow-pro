@@ -69,7 +69,7 @@ export class AuthController {
   async registro(
     @Body('email') email: string,
     @Body('nombre') nombre: string,
-    @Body('password') contraseña: string,
+    @Body('contraseña') contraseña: string,
   ): Promise<Partial<User>> {
     return await this.authService.registro(email, nombre, contraseña);
   }
@@ -119,7 +119,7 @@ export class AuthController {
   @HttpCode(200)
   async login(
     @Body('email') email: string,
-    @Body('password') contraseña: string,
+    @Body('contraseña') contraseña: string,
   ) {
     return await this.authService.login(email, contraseña);
   }
