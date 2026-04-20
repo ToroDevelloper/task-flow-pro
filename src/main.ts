@@ -19,21 +19,23 @@ async function bootstrap() {
     .setTitle('🚀 TaskFlow Pro API')
     .setDescription(
       'API completa para gestión de tareas y proyectos con autenticación segura.\n\n' +
-      '## Características\n' +
-      '- ✅ Autenticación con JWT\n' +
-      '- ✅ Control de roles (ADMIN, GERENTE, DESARROLLADOR)\n' +
-      '- ✅ Gestión completa de usuarios\n' +
-      '- ✅ Validación de datos con class-validator\n' +
-      '- ✅ Documentación automática interactiva\n\n' +
-      '## Guía Rápida\n' +
-      '1. **Registrarse**: POST `/auth/registro`\n' +
-      '2. **Iniciar sesión**: POST `/auth/login` (obtener token)\n' +
-      '3. **Usar token**: Incluir en header `Authorization: Bearer <token>`\n' +
-      '4. **Crear usuario**: POST `/users` (solo ADMIN)\n\n' +
-      '## Roles y Permisos\n' +
-      '- **ADMIN**: Crear, actualizar, eliminar usuarios\n' +
-      '- **GERENTE**: Listar usuarios\n' +
-      '- **DESARROLLADOR**: Ver perfil propio',
+        '## Características\n' +
+        '- ✅ Autenticación con JWT\n' +
+        '- ✅ Control de roles (ADMIN, GERENTE, DESARROLLADOR)\n' +
+        '- ✅ Gestión completa de usuarios\n' +
+        '- ✅ Gestión de proyectos\n' +
+        '- ✅ Validación de datos con class-validator\n' +
+        '- ✅ Documentación automática interactiva\n\n' +
+        '## Guía Rápida\n' +
+        '1. **Registrarse**: POST `/auth/registro`\n' +
+        '2. **Iniciar sesión**: POST `/auth/login` (obtener token)\n' +
+        '3. **Usar token**: Incluir en header `Authorization: Bearer <token>`\n' +
+        '4. **Crear usuario**: POST `/users` (solo ADMIN)\n' +
+        '5. **Crear proyecto**: POST `/projects` (ADMIN y GERENTE)\n\n' +
+        '## Roles y Permisos\n' +
+        '- **ADMIN**: Crear, actualizar, eliminar usuarios y proyectos\n' +
+        '- **GERENTE**: Listar usuarios, crear y actualizar proyectos\n' +
+        '- **DESARROLLADOR**: Ver perfil propio, listar proyectos',
     )
     .setVersion('1.0.0')
     .setContact(
@@ -79,6 +81,8 @@ async function bootstrap() {
   await app.listen(port);
 
   console.log(`\n✅ Servidor ejecutándose en: http://localhost:${port}`);
-  console.log(`📚 Documentación Swagger disponible en: http://localhost:${port}/docs\n`);
+  console.log(
+    `📚 Documentación Swagger disponible en: http://localhost:${port}/docs\n`,
+  );
 }
 bootstrap();
