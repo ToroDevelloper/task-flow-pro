@@ -1,7 +1,12 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Role } from '../../common/enums/role.enum';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({
@@ -31,15 +36,6 @@ export class UpdateUserDto {
   @IsString()
   @MinLength(6)
   password?: string;
-
-  @ApiPropertyOptional({
-    example: 'gerente',
-    enum: Role,
-    description: 'Rol del usuario',
-  })
-  @IsOptional()
-  @IsEnum(Role)
-  rol?: Role;
 
   @ApiPropertyOptional({
     example: false,

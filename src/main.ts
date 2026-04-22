@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { RolesService } from './modules/roles/roles.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,38 +18,53 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // ==================== CONFIGURACIÓN SWAGGER ====================
+  // ══════════════════════════════════════════════════════════════
+  // Inicializar roles base en BD (ADMIN, GERENTE, DESARROLLADOR)
+  // ══════════════════════════════════════════════════════════════
+  const rolesService = app.get(RolesService);
+  await rolesService.inicializarRoles();
+  console.log('✅ Roles base inicializados (ADMIN, GERENTE, DESARROLLADOR)');
+
+  // ══════════════════════════════════════════════════════════════
+  // CONFIGURACIÓN SWAGGER
+  // ══════════════════════════════════════════════════════════════
   const swaggerConfig = new DocumentBuilder()
     .setTitle('🚀 TaskFlow Pro API')
     .setDescription(
       'API completa para gestión de tareas y proyectos con autenticación segura.\n\n' +
         '## Características\n' +
         '- ✅ Autenticación con JWT\n' +
-        '- ✅ Control de roles (ADMIN, GERENTE, DESARROLLADOR)\n' +
+        '- ✅ Roles como módulo independiente en BD (ADMIN, GERENTE, DESARROLLADOR)\n' +
         '- ✅ Gestión completa de usuarios\n' +
         '- ✅ Gestión de proyectos\n' +
         '- ✅ Validación de datos con class-validator\n' +
         '- ✅ Documentación automática interactiva\n\n' +
-        '## Guía Rápida\n' +
-        '1. **Registrarse**: POST `/auth/registro`\n' +
-        '2. **Iniciar sesión**: POST `/auth/login` (obtener token)\n' +
-        '3. **Usar token**: Incluir en header `Authorization: Bearer <token>`\n' +
-        '4. **Crear usuario**: POST `/users` (solo ADMIN)\n' +
-        '5. **Crear proyecto**: POST `/projects` (ADMIN y GERENTE)\n' +
-        '6. **Consultar proyecto**: GET `/projects/:id` (usuarios autenticados)\n' +
-        '7. **Actualizar proyecto**: PATCH `/projects/:id` (creador o ADMIN)\n' +
-        '8. **Eliminar proyecto**: DELETE `/projects/:id` (solo ADMIN)\n\n' +
+        '## Guía de Prueba en Swagger\n' +
+        '### Paso 1 — Obtener lista de roles\n' +
+        '1. Registrarse: `POST /auth/registro` (se asigna rol DESARROLLADOR)\n' +
+        '2. Login: `POST /auth/login` → copiar el `accessToken`\n' +
+        '3. Autorizar: botón **Authorize** → pegar el token\n' +
+        '4. `GET /roles` → copiar el `id` del rol deseado (ADMIN, GERENTE o DESARROLLADOR)\n\n' +
+        '### Paso 2 — Flujo de usuarios\n' +
+        '5. `POST /users` (ADMIN) → crear usuario con `rolId` opcional\n' +
+        '6. `PATCH /users/:id/rol` (ADMIN) → asignar rol con el `rolId` obtenido en paso 4\n' +
+        '7. `GET /users` (ADMIN / GERENTE) → listar todos los usuarios\n' +
+        '8. `GET /users/perfil` → ver tu propio perfil (cualquier rol)\n' +
+        '9. `GET /users/:id` (ADMIN / GERENTE) → ver usuario por ID\n\n' +
         '## Roles y Permisos\n' +
-        '- **ADMIN**: Crear, actualizar y eliminar usuarios; crear, consultar, actualizar y eliminar proyectos\n' +
-        '- **GERENTE**: Listar usuarios; crear proyectos; consultar proyectos; actualizar solo los proyectos que creó\n' +
-        '- **DESARROLLADOR**: Ver perfil propio; listar proyectos; consultar proyectos; actualizar solo los proyectos que creó',
+        '| Endpoint | ADMIN | GERENTE | DESARROLLADOR |\n' +
+        '|---|:---:|:---:|:---:|\n' +
+        '| `POST /users` | ✅ | ❌ | ❌ |\n' +
+        '| `GET /users` | ✅ | ✅ | ❌ |\n' +
+        '| `GET /users/perfil` | ✅ | ✅ | ✅ |\n' +
+        '| `GET /users/:id` | ✅ | ✅ | ❌ |\n' +
+        '| `PATCH /users/:id/rol` | ✅ | ❌ | ❌ |\n' +
+        '| `PATCH /users/:id` | ✅ | ❌ | ❌ |\n' +
+        '| `DELETE /users/:id` | ✅ | ❌ | ❌ |\n' +
+        '| `GET /roles` | ✅ | ✅ | ✅ |\n',
     )
     .setVersion('1.0.0')
-    .setContact(
-      'Task Flow Pro',
-      'https://example.com',
-      'support@taskflowpro.com',
-    )
+    .setContact('Task Flow Pro', 'https://example.com', 'support@taskflowpro.com')
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .addServer('http://localhost:3000', 'Desarrollo')
     .addServer('https://api.taskflowpro.com', 'Producción')
@@ -57,7 +73,7 @@ async function bootstrap() {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: 'Ingresa el JWT token en el formato: **Bearer <token>**',
+        description: 'Ingresa el JWT token obtenido en `POST /auth/login`',
       },
       'Bearer',
     )
@@ -87,8 +103,6 @@ async function bootstrap() {
   await app.listen(port);
 
   console.log(`\n✅ Servidor ejecutándose en: http://localhost:${port}`);
-  console.log(
-    `📚 Documentación Swagger disponible en: http://localhost:${port}/docs\n`,
-  );
+  console.log(`📚 Swagger disponible en:    http://localhost:${port}/docs\n`);
 }
 bootstrap();

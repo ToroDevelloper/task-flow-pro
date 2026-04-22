@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './config/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { RolesModule } from './modules/roles/roles.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { TasksModule } from './modules/task/task.module';
 
@@ -13,6 +14,7 @@ import { TasksModule } from './modules/task/task.module';
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
     AuthModule,
+    RolesModule,
     UsersModule,
     ProjectsModule,
     TasksModule,

@@ -1,14 +1,12 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../modules/users/users.service';
 import { User } from '../modules/users/user.entity';
-import { Role } from '../common/enums/role.enum';
 import { CreateUserDto } from '../dtos/dto-users/create-user.dto';
-
-export interface LoginRequest {
-  email: string;
-  contraseña: string;
-}
 
 export interface LoginResponse {
   accessToken: string;
@@ -22,12 +20,16 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async registro(email: string, nombre: string, contraseña: string): Promise<Partial<User>> {
+  async registro(
+    email: string,
+    nombre: string,
+    contraseña: string,
+  ): Promise<Partial<User>> {
+    // El rol por defecto es DESARROLLADOR (lo asigna UsersService si no se indica rolId)
     const createUserDto: CreateUserDto = {
       email,
       nombre,
       password: contraseña,
-      rol: Role.DESARROLLADOR,
     };
 
     const usuario = await this.usersService.crear(createUserDto);
@@ -36,23 +38,19 @@ export class AuthService {
   }
 
   async login(email: string, contraseña: string): Promise<LoginResponse> {
-    // Validar entrada
     if (!email || !contraseña) {
       throw new BadRequestException('El correo y la contraseña son requeridos');
     }
 
-    // Buscar el usuario
     const usuario = await this.usersService.buscarPorEmail(email);
     if (!usuario) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Verificar que el usuario esté activo
     if (!usuario.activo) {
       throw new UnauthorizedException('El usuario está inactivo');
     }
 
-    // Verificar la contraseña
     const contraseñaValida = await this.usersService.verificarContraseña(
       contraseña,
       usuario.contraseña,
@@ -61,28 +59,23 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Generar el token JWT
+    // Guardar en el payload el nombre del rol (string), no la entidad completa
     const payload = {
       sub: usuario.id,
       email: usuario.email,
-      rol: usuario.rol,
+      rol: usuario.rol?.nombre ?? null,
     };
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: '24h',
-    });
 
-    // Devolver el token sin la contraseña
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '24h' });
+
     const { contraseña: _, ...usuarioSinContraseña } = usuario;
-    return {
-      accessToken,
-      usuario: usuarioSinContraseña,
-    };
+    return { accessToken, usuario: usuarioSinContraseña };
   }
 
   async validarToken(token: string): Promise<any> {
     try {
       return this.jwtService.verify(token);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Token inválido o expirado');
     }
   }
