@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../users/user.entity';
+import { Task } from '../task/task.entity';
 
 @Entity('proyectos')
 export class Project {
@@ -55,17 +57,25 @@ export class Project {
     format: 'uuid',
     description: 'ID del usuario creador del proyecto',
     example: '550e8400-e29b-41d4-a716-446655440000',
+    nullable: true,
   })
-  @Column({ type: 'uuid' })
-  idUsuario: string;
+  @Column({ type: 'uuid', nullable: true })
+  idUsuario: string | null;
 
   @ApiProperty({
     description: 'Usuario creador del proyecto',
     type: () => User,
   })
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'idUsuario' })
-  usuarioCreador: User;
+  usuarioCreador: User | null;
+
+  @ApiProperty({
+    type: () => [Task],
+    description: 'Tareas asociadas al proyecto',
+  })
+  @OneToMany(() => Task, (tarea) => tarea.proyecto)
+  tareas: Task[];
 
   @ApiProperty({
     format: 'date-time',

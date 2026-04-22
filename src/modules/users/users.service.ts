@@ -5,9 +5,11 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
+import { Project } from '../projects/project.entity';
+import { Task } from '../task/task.entity';
 import { RolesService } from '../roles/roles.service';
 import { CreateUserDto } from '../../dtos/dto-users/create-user.dto';
 import { UpdateUserDto } from '../../dtos/dto-users/update-user.dto';
@@ -17,7 +19,12 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Project)
+    private projectsRepository: Repository<Project>,
+    @InjectRepository(Task)
+    private tasksRepository: Repository<Task>,
     private rolesService: RolesService,
+    private dataSource: DataSource,
   ) {}
 
   async crear(dto: CreateUserDto): Promise<User> {
@@ -125,9 +132,35 @@ export class UsersService {
   }
 
   async eliminar(id: string): Promise<void> {
-    const resultado = await this.usersRepository.delete(id);
-    if (resultado.affected === 0) {
+    const usuario = await this.buscarPorId(id);
+    if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.update(
+        Task,
+        { idUsuarioAsignado: id },
+        { idUsuarioAsignado: null },
+      );
+      await queryRunner.manager.update(
+        Project,
+        { idUsuario: id },
+        { idUsuario: null },
+      );
+
+      await queryRunner.manager.delete(User, { id });
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 }
