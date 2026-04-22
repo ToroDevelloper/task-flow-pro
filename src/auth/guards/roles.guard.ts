@@ -1,6 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '../../common/enums/role.enum';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
@@ -8,7 +12,7 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const rolesRequeridos = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+    const rolesRequeridos = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -25,9 +29,13 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Usuario no autenticado');
     }
 
-    // Verificar si el rol del usuario está en los roles permitidos
-    if (!rolesRequeridos.includes(usuario.rol)) {
-      throw new ForbiddenException(`No tienes permisos. Se requieren los siguientes roles: ${rolesRequeridos.join(', ')}`);
+    // usuario.rol es una entidad Role => comparar con su campo "nombre"
+    const rolNombreUsuario: string = usuario.rol?.nombre;
+
+    if (!rolNombreUsuario || !rolesRequeridos.includes(rolNombreUsuario)) {
+      throw new ForbiddenException(
+        `No tienes permisos. Se requieren los siguientes roles: ${rolesRequeridos.join(', ')}`,
+      );
     }
 
     return true;

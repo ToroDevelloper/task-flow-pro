@@ -1,7 +1,13 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Role } from '../../common/enums/role.enum';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -30,14 +36,13 @@ export class CreateUserDto {
   password: string;
 
   @ApiPropertyOptional({
-    example: 'admin',
-    enum: Role,
-    description: 'Rol del usuario. Por defecto: desarrollador',
-    default: Role.DESARROLLADOR,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'ID del rol a asignar. Si no se proporciona, se asigna DESARROLLADOR por defecto.',
+    format: 'uuid',
   })
   @IsOptional()
-  @IsEnum(Role)
-  rol?: Role;
+  @IsUUID()
+  rolId?: string;
 
   @ApiPropertyOptional({
     example: true,

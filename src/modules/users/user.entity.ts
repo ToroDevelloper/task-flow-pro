@@ -1,6 +1,14 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Role } from '../../common/enums/role.enum';
+import { Role } from '../roles/role.entity';
 
 @Entity('usuarios')
 export class User {
@@ -27,23 +35,15 @@ export class User {
   @Column({ type: 'varchar', length: 255 })
   nombre: string;
 
-  @ApiProperty({
-    description: 'Contraseña encriptada del usuario (nunca se devuelve)',
-    format: 'password',
-  })
   @Column({ type: 'varchar', length: 255 })
   contraseña: string;
 
   @ApiProperty({
-    enum: Role,
-    description: 'Rol del usuario en el sistema',
-    example: 'admin',
+    description: 'Rol asignado al usuario',
+    type: () => Role,
   })
-  @Column({
-    type: 'enum',
-    enum: Role,
-    default: Role.DESARROLLADOR,
-  })
+  @ManyToOne(() => Role, (role) => role.usuarios, { eager: true, nullable: true })
+  @JoinColumn({ name: 'rol_id' })
   rol: Role;
 
   @ApiProperty({
