@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  IsIn,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -36,6 +37,15 @@ export class UpdateUserDto {
   @IsString()
   @MinLength(6)
   password?: string;
+
+  @ApiPropertyOptional({
+    example: 'ADMIN',
+    description: 'Rol a asignar: ADMIN, GERENTE o DESARROLLADOR',
+    enum: ['ADMIN', 'GERENTE', 'DESARROLLADOR'],
+  })
+  @IsOptional()
+  @IsIn(['ADMIN', 'GERENTE', 'DESARROLLADOR'])
+  rol?: string;
 
   @ApiPropertyOptional({
     example: false,
