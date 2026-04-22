@@ -18,7 +18,10 @@ export class Task {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ApiProperty({ description: 'Título de la tarea', example: 'Diseñar base de datos' })
+  @ApiProperty({
+    description: 'Título de la tarea',
+    example: 'Diseñar base de datos',
+  })
   @Column({ type: 'varchar', length: 255 })
   titulo: string;
 
@@ -30,19 +33,26 @@ export class Task {
   @Column({ type: 'enum', enum: TaskStatus, default: TaskStatus.PENDIENTE })
   estado: TaskStatus;
 
-  @ApiProperty({ format: 'uuid', description: 'ID del proyecto al que pertenece' })
+  @ApiProperty({
+    format: 'uuid',
+    description: 'ID del proyecto al que pertenece',
+  })
   @Column({ type: 'uuid' })
   idProyecto: string;
 
-  @ManyToOne(() => Project)
+  @ManyToOne(() => Project, { onDelete: 'CASCADE', cascade: true })
   @JoinColumn({ name: 'idProyecto' })
   proyecto: Project;
 
-  @ApiProperty({ format: 'uuid', description: 'ID del usuario asignado', nullable: true })
+  @ApiProperty({
+    format: 'uuid',
+    description: 'ID del usuario asignado',
+    nullable: true,
+  })
   @Column({ type: 'uuid', nullable: true })
   idUsuarioAsignado: string | null;
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'idUsuarioAsignado' })
   usuarioAsignado: User | null;
 

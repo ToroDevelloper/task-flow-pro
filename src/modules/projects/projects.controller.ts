@@ -63,7 +63,8 @@ export class ProjectsController {
     @Request() req: any,
   ): Promise<Project> {
     const creatorId = req.user.id;
-    return await this.projectsService.crear(dto, creatorId);
+    const creatorRole = req.user.rol?.nombre;
+    return await this.projectsService.crear(dto, creatorId, creatorRole);
   }
 
   @ApiOperation({
@@ -160,10 +161,11 @@ export class ProjectsController {
   @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
   @ApiForbiddenResponse({ description: 'Solo ADMIN puede eliminar proyectos' })
   @ApiNotFoundResponse({ description: 'Proyecto no encontrado' })
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.GERENTE)
   @Delete(':id')
   @HttpCode(204)
-  async eliminar(@Param('id') id: string): Promise<void> {
-    await this.projectsService.eliminar(id);
+  async eliminar(@Param('id') id: string, @Request() req: any): Promise<void> {
+    const actorRole = req.user.rol?.nombre;
+    await this.projectsService.eliminar(id, actorRole);
   }
 }

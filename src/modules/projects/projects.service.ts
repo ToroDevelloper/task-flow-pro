@@ -5,11 +5,12 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Project } from './project.entity';
 import { CreateProjectDto } from '../../dtos/dto-projects/create-project.dto';
 import { UpdateProjectDto } from '../../dtos/dto-projects/response-project.dto';
 import { UsersService } from '../users/users.service';
+import { Role } from '../../common/enums/role.enum';
 
 @Injectable()
 export class ProjectsService {
@@ -17,9 +18,20 @@ export class ProjectsService {
     @InjectRepository(Project)
     private projectsRepository: Repository<Project>,
     private usersService: UsersService,
+    private dataSource: DataSource,
   ) {}
 
-  async crear(dto: CreateProjectDto, creatorId: string): Promise<Project> {
+  async crear(
+    dto: CreateProjectDto,
+    creatorId: string,
+    creatorRole: string,
+  ): Promise<Project> {
+    if (creatorRole !== Role.ADMIN && creatorRole !== Role.GERENTE) {
+      throw new ForbiddenException(
+        'Solo los usuarios con rol ADMIN o GERENTE pueden crear proyectos',
+      );
+    }
+
     const usuario = await this.usersService.buscarPorId(creatorId);
     if (!usuario) {
       throw new NotFoundException('Usuario creador no encontrado');
@@ -125,10 +137,32 @@ export class ProjectsService {
     return await this.projectsRepository.save(proyecto);
   }
 
-  async eliminar(id: string): Promise<void> {
-    const resultado = await this.projectsRepository.delete(id);
-    if (resultado.affected === 0) {
+  async eliminar(id: string, actorRole: string): Promise<void> {
+    if (actorRole !== Role.ADMIN && actorRole !== Role.GERENTE) {
+      throw new ForbiddenException(
+        'Solo los usuarios con rol ADMIN o GERENTE pueden eliminar proyectos',
+      );
+    }
+
+    const proyecto = await this.buscarPorId(id);
+    if (!proyecto) {
       throw new NotFoundException('Proyecto no encontrado');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.update(Project, { id }, { idUsuario: null });
+      await queryRunner.manager.delete(Project, { id });
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 }
