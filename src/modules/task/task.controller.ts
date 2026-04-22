@@ -2,10 +2,13 @@ import {
   Controller,
   Post,
   Patch,
+  Get,
+  Delete,
   Body,
   Param,
   UseGuards,
   HttpCode,
+  Req,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,6 +21,7 @@ import {
   ApiNotFoundResponse,
   ApiBadRequestResponse,
   ApiParam,
+  ApiNoContentResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -27,6 +31,7 @@ import { TasksService } from './task.service';
 import { Task } from './task.entity';
 import { CreateTaskDto } from '../../dtos/dto-task/create-task.dto';
 import { AssignTaskDto } from '../../dtos/dto-task/assign-task.dto';
+import { UpdateTaskStatusDto } from '../../dtos/dto-task/update-task-status.dto';
 
 @ApiTags('✅ Tasks')
 @ApiBearerAuth('Bearer')
@@ -74,4 +79,68 @@ export class TasksController {
   ): Promise<Task> {
     return await this.tasksService.asignar(id, dto);
   }
-}
+
+  @ApiOperation({
+    summary: '📁 Listar tareas por proyecto',
+    description: 'Retorna todas las tareas asociadas a un proyecto específico.',
+  })
+  @ApiParam({
+    name: 'idProyecto',
+    type: 'string',
+    format: 'uuid',
+    description: 'ID del proyecto',
+  })
+  @ApiOkResponse({ description: 'Lista de tareas del proyecto', type: [Task] })
+  @ApiNotFoundResponse({ description: 'Proyecto no encontrado' })
+  @Get('proyecto/:idProyecto')
+  async listarPorProyecto(
+    @Param('idProyecto') idProyecto: string,
+  ): Promise<Task[]> {
+    return await this.tasksService.listarPorProyecto(idProyecto);
+  }
+
+  @ApiOperation({
+    summary: '🔄 Actualizar estado de tarea',
+    description: 'Permite al usuario asignado actualizar el estado de su tarea (pendiente, en_progreso, completada).',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    format: 'uuid',
+    description: 'ID de la tarea',
+  })
+  @ApiOkResponse({ description: 'Estado actualizado exitosamente', type: Task })
+  @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
+  @ApiForbiddenResponse({ description: 'Solo el usuario asignado puede cambiar el estado' })
+  @ApiNotFoundResponse({ description: 'Tarea no encontrada' })
+  @Patch(':id/estado')
+  async actualizarEstado(
+    @Param('id') id: string,
+    @Body() dto: UpdateTaskStatusDto,
+    @Req() req: any,
+  ): Promise<Task> {
+    const userId = req.user.id;
+    return await this.tasksService.actualizarEstado(id, dto.estado, userId);
+  }
+
+  @ApiOperation({
+    summary: '🗑️ Eliminar tarea',
+    description: 'Elimina una tarea de forma permanente. Solo accesible por ADMIN.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    format: 'uuid',
+    description: 'ID de la tarea a eliminar',
+  })
+  @ApiNoContentResponse({ description: 'Tarea eliminada exitosamente' })
+  @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
+  @ApiForbiddenResponse({ description: 'Solo ADMIN puede eliminar tareas' })
+  @ApiNotFoundResponse({ description: 'Tarea no encontrada' })
+  @Roles(Role.ADMIN)
+  @Delete(':id')
+  @HttpCode(204)
+  async eliminar(@Param('id') id: string): Promise<void> {
+    return await this.tasksService.eliminar(id);
+  }
+}
