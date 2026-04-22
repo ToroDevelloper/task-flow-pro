@@ -135,7 +135,13 @@ export class ProjectsController {
     @Body() dto: UpdateProjectDto,
     @Request() req: any,
   ): Promise<Project> {
-    return await this.projectsService.actualizar(id, dto, req.user.id, req.user.rol);
+    const actorRoleName = req.user.rol?.nombre;
+    return await this.projectsService.actualizar(
+      id,
+      dto,
+      req.user.id,
+      actorRoleName,
+    );
   }
 
   @ApiOperation({

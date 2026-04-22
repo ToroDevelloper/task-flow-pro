@@ -134,7 +134,12 @@ export class UsersController {
           id: '550e8400-e29b-41d4-a716-446655440000',
           email: 'admin@example.com',
           nombre: 'Admin User',
-          rol: { id: '...', nombre: 'ADMIN', descripcion: 'Administrador del sistema con permisos completos', activo: true },
+          rol: {
+            id: '...',
+            nombre: 'ADMIN',
+            descripcion: 'Administrador del sistema con permisos completos',
+            activo: true,
+          },
           activo: true,
           fechaCreacion: '2025-04-19T10:30:00.000Z',
         },
@@ -142,7 +147,12 @@ export class UsersController {
           id: '550e8400-e29b-41d4-a716-446655440001',
           email: 'gerente@example.com',
           nombre: 'Gerente User',
-          rol: { id: '...', nombre: 'GERENTE', descripcion: 'Gerente de proyectos y equipos', activo: true },
+          rol: {
+            id: '...',
+            nombre: 'GERENTE',
+            descripcion: 'Gerente de proyectos y equipos',
+            activo: true,
+          },
           activo: true,
           fechaCreacion: '2025-04-19T10:35:00.000Z',
         },
@@ -150,7 +160,9 @@ export class UsersController {
     },
   })
   @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
-  @ApiForbiddenResponse({ description: 'Solo ADMIN y GERENTE pueden listar usuarios' })
+  @ApiForbiddenResponse({
+    description: 'Solo ADMIN y GERENTE pueden listar usuarios',
+  })
   @Roles('ADMIN', 'GERENTE')
   @Get()
   async obtenerTodos(): Promise<Partial<User>[]> {
@@ -181,7 +193,12 @@ export class UsersController {
         id: '550e8400-e29b-41d4-a716-446655440000',
         email: 'usuario@example.com',
         nombre: 'Juan Pérez',
-        rol: { id: '...', nombre: 'GERENTE', descripcion: 'Gerente de proyectos y equipos', activo: true },
+        rol: {
+          id: '...',
+          nombre: 'GERENTE',
+          descripcion: 'Gerente de proyectos y equipos',
+          activo: true,
+        },
         activo: true,
         fechaCreacion: '2025-04-19T10:30:00.000Z',
         fechaActualizacion: '2025-04-19T10:30:00.000Z',
@@ -189,7 +206,9 @@ export class UsersController {
     },
   })
   @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
-  @ApiForbiddenResponse({ description: 'Solo ADMIN y GERENTE pueden consultar usuarios' })
+  @ApiForbiddenResponse({
+    description: 'Solo ADMIN y GERENTE pueden consultar usuarios',
+  })
   @ApiNotFoundResponse({ description: 'Usuario no encontrado' })
   @Roles('ADMIN', 'GERENTE')
   @Get(':id')
@@ -247,7 +266,7 @@ export class UsersController {
     @Param('id') id: string,
     @Body() dto: AssignRoleDto,
   ): Promise<Partial<User>> {
-    const usuario = await this.usersService.asignarRol(id, dto.rolId);
+    const usuario = await this.usersService.asignarRol(id, dto.rol);
     const { contraseña: _, ...usuarioSinContraseña } = usuario;
     return usuarioSinContraseña;
   }
@@ -276,7 +295,12 @@ export class UsersController {
         id: '550e8400-e29b-41d4-a716-446655440000',
         email: 'nuevoemail@example.com',
         nombre: 'Nombre Actualizado',
-        rol: { id: '...', nombre: 'GERENTE', descripcion: 'Gerente de proyectos y equipos', activo: true },
+        rol: {
+          id: '...',
+          nombre: 'GERENTE',
+          descripcion: 'Gerente de proyectos y equipos',
+          activo: true,
+        },
         activo: true,
         fechaCreacion: '2025-04-19T10:30:00.000Z',
         fechaActualizacion: '2025-04-19T11:45:00.000Z',
@@ -286,7 +310,9 @@ export class UsersController {
   @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
   @ApiForbiddenResponse({ description: 'Solo ADMIN puede actualizar usuarios' })
   @ApiNotFoundResponse({ description: 'Usuario no encontrado' })
-  @ApiConflictResponse({ description: 'El email ya está en uso por otro usuario' })
+  @ApiConflictResponse({
+    description: 'El email ya está en uso por otro usuario',
+  })
   @Roles('ADMIN')
   @Patch(':id')
   async actualizar(

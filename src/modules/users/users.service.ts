@@ -21,7 +21,7 @@ export class UsersService {
   ) {}
 
   async crear(dto: CreateUserDto): Promise<User> {
-    const { email, nombre, password, rolId, activo } = dto;
+    const { email, nombre, password, rol, activo } = dto;
 
     // Validar que el email no exista
     const usuarioExistente = await this.usersRepository.findOne({
@@ -38,11 +38,9 @@ export class UsersService {
       );
     }
 
-    // Resolver rol: si no se pasa rolId, asignar DESARROLLADOR por defecto
-    let rol = await this.rolesService.obtenerPorNombre('DESARROLLADOR');
-    if (rolId) {
-      rol = await this.rolesService.obtenerPorId(rolId);
-    }
+    // Resolver rol: si no se pasa rol, asignar DESARROLLADOR por defecto
+    const rolNombre = rol?.toUpperCase() || 'DESARROLLADOR';
+    const rolEntity = await this.rolesService.obtenerPorNombre(rolNombre);
 
     // Encriptar la contraseña
     const contraseñaEncriptada = await bcrypt.hash(password, 10);
@@ -51,7 +49,7 @@ export class UsersService {
       email,
       nombre,
       contraseña: contraseñaEncriptada,
-      rol,
+      rol: rolEntity,
       activo: activo ?? true,
     });
 
@@ -104,17 +102,23 @@ export class UsersService {
     if (datos.password) {
       usuario.contraseña = await bcrypt.hash(datos.password, 10);
     }
+    if (datos.rol) {
+      const rolNombre = datos.rol.toUpperCase();
+      usuario.rol = await this.rolesService.obtenerPorNombre(rolNombre);
+    }
 
     return await this.usersRepository.save(usuario);
   }
 
-  async asignarRol(id: string, rolId: string): Promise<User> {
+  async asignarRol(id: string, rolNombre: string): Promise<User> {
     const usuario = await this.buscarPorId(id);
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    const rol = await this.rolesService.obtenerPorId(rolId);
+    const rol = await this.rolesService.obtenerPorNombre(
+      rolNombre.toUpperCase(),
+    );
     usuario.rol = rol;
 
     return await this.usersRepository.save(usuario);

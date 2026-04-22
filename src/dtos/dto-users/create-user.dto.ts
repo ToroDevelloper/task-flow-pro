@@ -4,8 +4,8 @@ import {
   IsEmail,
   IsOptional,
   IsString,
-  IsUUID,
   MinLength,
+  IsIn,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -36,13 +36,14 @@ export class CreateUserDto {
   password: string;
 
   @ApiPropertyOptional({
-    example: '550e8400-e29b-41d4-a716-446655440000',
-    description: 'ID del rol a asignar. Si no se proporciona, se asigna DESARROLLADOR por defecto.',
-    format: 'uuid',
+    example: 'ADMIN',
+    description:
+      'Rol a asignar: ADMIN, GERENTE o DESARROLLADOR. Si no se proporciona, se asigna DESARROLLADOR por defecto.',
+    enum: ['ADMIN', 'GERENTE', 'DESARROLLADOR'],
   })
   @IsOptional()
-  @IsUUID()
-  rolId?: string;
+  @IsIn(['ADMIN', 'GERENTE', 'DESARROLLADOR'])
+  rol?: string;
 
   @ApiPropertyOptional({
     example: true,

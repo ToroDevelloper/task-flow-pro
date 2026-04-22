@@ -1,12 +1,12 @@
-import { IsUUID } from 'class-validator';
+import { IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AssignRoleDto {
   @ApiProperty({
-    format: 'uuid',
-    description: 'ID único del rol a asignar',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    example: 'ADMIN',
+    description: 'Rol a asignar: ADMIN, GERENTE o DESARROLLADOR',
+    enum: ['ADMIN', 'GERENTE', 'DESARROLLADOR'],
   })
-  @IsUUID()
-  rolId: string;
+  @IsIn(['ADMIN', 'GERENTE', 'DESARROLLADOR'])
+  rol: string;
 }

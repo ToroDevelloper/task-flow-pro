@@ -53,7 +53,7 @@ export class TasksService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    if (usuario.rol !== Role.DESARROLLADOR) {
+    if (usuario.rol.nombre !== Role.DESARROLLADOR) {
       throw new BadRequestException('Solo se pueden asignar tareas a usuarios con rol DESARROLLADOR');
     }
 
