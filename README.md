@@ -1,11 +1,11 @@
 # Integrantes
-- Angel Toro
-- Andres Jansasoy
-- Tatiana Diaz 
-- Michael Aparez
-- Maria Isabel Carrillo
-- Harri Hurtado
-- Farid Castellanos
+- Toro Caicedo Angel Ivan
+- Jansasoy Muñoz Jeferson Andres
+- Diaz Imbajoa Tatiana
+- Apraez Ceballos Michael Leonardo
+- Carrillo Vidales María Isabel
+- Montaña Hurtado Harrisson Estiven
+- Castellanos Semanate Farid Esteban
 
 #
 
