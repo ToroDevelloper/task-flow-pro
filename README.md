@@ -1,3 +1,14 @@
+# Integrantes
+- Angel Toro
+- Andres Jansasoy
+- Tatiana Diaz 
+- Michael Aparez
+- Maria Isabel Carrillo
+- Harri Hurtado
+- Farid Castellanos
+
+#
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
