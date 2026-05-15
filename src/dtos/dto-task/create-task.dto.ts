@@ -2,7 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateTaskDto {
-  @ApiProperty({ description: 'Título de la tarea', example: 'Diseñar base de datos' })
+  @ApiProperty({
+    description: 'Título de la tarea',
+    example: 'Diseñar base de datos',
+  })
   @IsString()
   @IsNotEmpty()
   titulo: string;
@@ -12,7 +15,10 @@ export class CreateTaskDto {
   @IsOptional()
   descripcion?: string;
 
-  @ApiProperty({ format: 'uuid', description: 'ID del proyecto al que pertenece la tarea' })
+  @ApiProperty({
+    format: 'uuid',
+    description: 'ID del proyecto al que pertenece la tarea',
+  })
   @IsUUID()
   @IsNotEmpty()
   idProyecto: string;

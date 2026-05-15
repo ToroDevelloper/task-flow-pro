@@ -20,7 +20,8 @@ export class RolesController {
 
   @ApiOperation({
     summary: 'Listar todos los roles',
-    description: 'Obtiene la lista de todos los roles disponibles en el sistema.',
+    description:
+      'Obtiene la lista de todos los roles disponibles en el sistema.',
   })
   @ApiOkResponse({
     description: 'Lista de roles obtenida exitosamente',

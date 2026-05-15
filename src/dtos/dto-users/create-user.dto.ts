@@ -1,4 +1,3 @@
-import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
@@ -30,7 +29,6 @@ export class CreateUserDto {
     description: 'Contraseña del usuario (mínimo 6 caracteres)',
     format: 'password',
   })
-  @Transform(({ value, obj }) => value ?? obj?.contraseña)
   @IsString()
   @MinLength(6)
   password: string;

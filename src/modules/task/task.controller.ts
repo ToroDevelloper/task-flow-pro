@@ -32,6 +32,7 @@ import { Task } from './task.entity';
 import { CreateTaskDto } from '../../dtos/dto-task/create-task.dto';
 import { AssignTaskDto } from '../../dtos/dto-task/assign-task.dto';
 import { UpdateTaskStatusDto } from '../../dtos/dto-task/update-task-status.dto';
+import { AssignedUserDeveloperGuard } from './guards/assigned-user-developer.guard';
 
 @ApiTags('✅ Tasks')
 @ApiBearerAuth('Bearer')
@@ -42,7 +43,8 @@ export class TasksController {
 
   @ApiOperation({
     summary: '✨ Crear nueva tarea',
-    description: 'Crea una nueva tarea asociada a un proyecto. Solo GERENTE puede crear tareas.',
+    description:
+      'Crea una nueva tarea asociada a un proyecto. Solo GERENTE puede crear tareas.',
   })
   @ApiCreatedResponse({ description: 'Tarea creada exitosamente', type: Task })
   @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
@@ -58,7 +60,8 @@ export class TasksController {
 
   @ApiOperation({
     summary: '👤 Asignar tarea a desarrollador',
-    description: 'Asigna una tarea existente a un usuario con rol DESARROLLADOR. Solo GERENTE puede asignar tareas.',
+    description:
+      'Asigna una tarea existente a un usuario con rol DESARROLLADOR. Solo GERENTE puede asignar tareas.',
   })
   @ApiParam({
     name: 'id',
@@ -70,8 +73,11 @@ export class TasksController {
   @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
   @ApiForbiddenResponse({ description: 'Solo GERENTE puede asignar tareas' })
   @ApiNotFoundResponse({ description: 'Tarea o usuario no encontrado' })
-  @ApiBadRequestResponse({ description: 'El usuario no tiene rol DESARROLLADOR' })
+  @ApiBadRequestResponse({
+    description: 'El usuario no tiene rol DESARROLLADOR',
+  })
   @Roles(Role.GERENTE)
+  @UseGuards(JwtAuthGuard, RolesGuard, AssignedUserDeveloperGuard)
   @Patch(':id/asignar')
   async asignar(
     @Param('id') id: string,
@@ -101,7 +107,8 @@ export class TasksController {
 
   @ApiOperation({
     summary: '🔄 Actualizar estado de tarea',
-    description: 'Permite al usuario asignado actualizar el estado de su tarea (pendiente, en_progreso, completada).',
+    description:
+      'Permite al usuario asignado actualizar el estado de su tarea (pendiente, en_progreso, completada).',
   })
   @ApiParam({
     name: 'id',
@@ -111,7 +118,9 @@ export class TasksController {
   })
   @ApiOkResponse({ description: 'Estado actualizado exitosamente', type: Task })
   @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
-  @ApiForbiddenResponse({ description: 'Solo el usuario asignado puede cambiar el estado' })
+  @ApiForbiddenResponse({
+    description: 'Solo el usuario asignado puede cambiar el estado',
+  })
   @ApiNotFoundResponse({ description: 'Tarea no encontrada' })
   @Patch(':id/estado')
   async actualizarEstado(
@@ -125,7 +134,8 @@ export class TasksController {
 
   @ApiOperation({
     summary: '🗑️ Eliminar tarea',
-    description: 'Elimina una tarea de forma permanente. Solo accesible por ADMIN.',
+    description:
+      'Elimina una tarea de forma permanente. Solo accesible por ADMIN.',
   })
   @ApiParam({
     name: 'id',
@@ -143,4 +153,4 @@ export class TasksController {
   async eliminar(@Param('id') id: string): Promise<void> {
     return await this.tasksService.eliminar(id);
   }
-}
+}

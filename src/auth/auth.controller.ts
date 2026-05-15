@@ -1,8 +1,15 @@
-import { Controller, Post, Body, UseGuards, Get, Request, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Request,
+  HttpCode,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
-  ApiResponse,
   ApiTags,
   ApiBody,
   ApiCreatedResponse,
@@ -11,9 +18,11 @@ import {
   ApiConflictResponse,
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
-import { AuthService } from './auth.service';
+import { AuthService, LoginResponse } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { User } from '../modules/users/user.entity';
+import { RegisterDto } from '../dtos/dto-auth/register.dto';
+import { LoginDto } from '../dtos/dto-auth/login.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -22,33 +31,10 @@ export class AuthController {
 
   @ApiOperation({
     summary: '📝 Registrar nuevo usuario',
-    description: 'Permite que un nuevo usuario se registre en el sistema. La contraseña se encriptará automáticamente.',
+    description:
+      'Permite que un nuevo usuario se registre en el sistema. La contraseña se encriptará automáticamente.',
   })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['email', 'nombre', 'contraseña'],
-      properties: {
-        email: {
-          type: 'string',
-          format: 'email',
-          example: 'usuario@example.com',
-          description: 'Email único del usuario',
-        },
-        nombre: {
-          type: 'string',
-          example: 'Juan Pérez',
-          description: 'Nombre completo del usuario (mínimo 2 caracteres)',
-        },
-        contraseña: {
-          type: 'string',
-          format: 'password',
-          example: 'SecurePassword123',
-          description: 'Contraseña (mínimo 6 caracteres)',
-        },
-      },
-    },
-  })
+  @ApiBody({ type: RegisterDto })
   @ApiCreatedResponse({
     description: 'Usuario registrado exitosamente',
     schema: {
@@ -62,42 +48,22 @@ export class AuthController {
       },
     },
   })
-  @ApiConflictResponse({ description: 'El correo electrónico ya está registrado' })
+  @ApiConflictResponse({
+    description: 'El correo electrónico ya está registrado',
+  })
   @ApiBadRequestResponse({ description: 'Datos de entrada inválidos' })
   @Post('registro')
   @HttpCode(201)
-  async registro(
-    @Body('email') email: string,
-    @Body('nombre') nombre: string,
-    @Body('contraseña') contraseña: string,
-  ): Promise<Partial<User>> {
-    return await this.authService.registro(email, nombre, contraseña);
+  async registro(@Body() dto: RegisterDto): Promise<Partial<User>> {
+    return await this.authService.registro(dto.email, dto.nombre, dto.password);
   }
 
   @ApiOperation({
     summary: '🔐 Iniciar sesión',
-    description: 'Valida las credenciales del usuario y genera un token JWT válido por 24 horas.',
+    description:
+      'Valida las credenciales del usuario y genera un token JWT válido por 24 horas.',
   })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['email', 'contraseña'],
-      properties: {
-        email: {
-          type: 'string',
-          format: 'email',
-          example: 'usuario@example.com',
-          description: 'Email registrado del usuario',
-        },
-        contraseña: {
-          type: 'string',
-          format: 'password',
-          example: 'SecurePassword123',
-          description: 'Contraseña del usuario',
-        },
-      },
-    },
-  })
+  @ApiBody({ type: LoginDto })
   @ApiOkResponse({
     description: 'Login exitoso. Token JWT generado',
     schema: {
@@ -113,15 +79,14 @@ export class AuthController {
       },
     },
   })
-  @ApiUnauthorizedResponse({ description: 'Credenciales inválidas o usuario inactivo' })
+  @ApiUnauthorizedResponse({
+    description: 'Credenciales inválidas o usuario inactivo',
+  })
   @ApiBadRequestResponse({ description: 'Email o contraseña faltante' })
   @Post('login')
   @HttpCode(200)
-  async login(
-    @Body('email') email: string,
-    @Body('contraseña') contraseña: string,
-  ) {
-    return await this.authService.login(email, contraseña);
+  async login(@Body() dto: LoginDto): Promise<LoginResponse> {
+    return await this.authService.login(dto.email, dto.password);
   }
 
   @ApiBearerAuth('Bearer')
@@ -153,7 +118,8 @@ export class AuthController {
   @ApiBearerAuth('Bearer')
   @ApiOperation({
     summary: '✅ Validar token JWT',
-    description: 'Verifica que el token JWT proporcionado es válido y no ha expirado.',
+    description:
+      'Verifica que el token JWT proporcionado es válido y no ha expirado.',
   })
   @ApiOkResponse({
     description: 'Token es válido',

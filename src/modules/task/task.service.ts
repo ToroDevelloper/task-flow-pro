@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,7 +10,6 @@ import { CreateTaskDto } from '../../dtos/dto-task/create-task.dto';
 import { AssignTaskDto } from '../../dtos/dto-task/assign-task.dto';
 import { ProjectsService } from '../projects/projects.service';
 import { UsersService } from '../users/users.service';
-import { Role } from '../../common/enums/role.enum';
 import { TaskStatus } from '../../common/enums/task-status.enum';
 
 @Injectable()
@@ -52,13 +50,6 @@ export class TasksService {
     const usuario = await this.usersService.buscarPorId(dto.idUsuarioAsignado);
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
-    }
-
-    // Adaptado a la nueva lógica de roles: usuario.rol.nombre
-    if (usuario.rol.nombre !== Role.DESARROLLADOR) {
-      throw new BadRequestException(
-        'Solo se pueden asignar tareas a usuarios con rol DESARROLLADOR',
-      );
     }
 
     tarea.idUsuarioAsignado = dto.idUsuarioAsignado;

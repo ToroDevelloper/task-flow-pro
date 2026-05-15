@@ -1,109 +1,208 @@
-# Integrantes
+# TaskFlow Pro
+
+API REST para gestion interna de proyectos y tareas con autenticacion JWT y control de acceso basado en roles.
+
+## Integrantes
+
 - Toro Caicedo Angel Ivan
-- Jansasoy Muñoz Jeferson Andres
+- Jansasoy Munoz Jeferson Andres
 - Diaz Imbajoa Tatiana
 - Apraez Ceballos Michael Leonardo
-- Carrillo Vidales María Isabel
-- Montaña Hurtado Harrisson Estiven
+- Carrillo Vidales Maria Isabel
+- Montana Hurtado Harrisson Estiven
 - Castellanos Semanate Farid Esteban
 
-#
+## Tecnologias
 
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+- NestJS
+- TypeORM
+- MySQL
+- Passport JWT y `@nestjs/jwt`
+- bcrypt
+- class-validator y DTOs
+- Swagger
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Modelo de dominio
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Entidades principales:
 
-## Description
+- `User`: usuarios del sistema. Tiene email unico, nombre, contrasena encriptada, estado activo y un rol.
+- `Role`: roles permitidos en el sistema: `ADMIN`, `GERENTE`, `DESARROLLADOR`.
+- `Project`: proyectos con nombre, descripcion, fecha de inicio, fecha de fin y usuario creador.
+- `Task`: tareas asociadas a un proyecto, con usuario asignado y estado.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Relaciones:
 
-## Project setup
+- Un `Role` tiene muchos `User`.
+- Un `User` puede crear muchos `Project`.
+- Un `Project` pertenece a un usuario creador. Si el usuario se elimina, el proyecto queda con creador nulo.
+- Un `Project` tiene muchas `Task`. Si el proyecto se elimina, sus tareas se eliminan en cascada.
+- Una `Task` puede tener un usuario asignado. Si el usuario se elimina, la tarea queda sin asignado.
 
-```bash
-$ npm install
-```
+El MER grafico esta en [Documentacion/MER-tast-flow-pro.jpeg](./Documentacion/MER-tast-flow-pro.jpeg).
 
-## Compile and run the project
+## Reglas de negocio
 
-```bash
-# development
-$ npm run start
+- Ningun endpoint protegido se puede consumir sin token JWT.
+- `ADMIN` puede administrar usuarios y eliminar proyectos/tareas.
+- `GERENTE` puede listar usuarios, crear proyectos, crear tareas y asignarlas a desarrolladores.
+- `DESARROLLADOR` puede consultar recursos autenticados y actualizar el estado de sus tareas asignadas.
+- Solo el creador de un proyecto o un `ADMIN` puede actualizarlo.
+- Solo `ADMIN` puede eliminar proyectos.
+- Solo el usuario asignado puede cambiar el estado de una tarea.
+- Solo se pueden asignar tareas a usuarios con rol `DESARROLLADOR`.
 
-# watch mode
-$ npm run start:dev
+## Variables de entorno
 
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
+Crear un archivo `.env` a partir de `.env.example`:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
 ```
 
-## Deployment
+Variables usadas:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+| Variable | Descripcion |
+| --- | --- |
+| `NODE_ENV` | Entorno de ejecucion. En `development` TypeORM sincroniza entidades. |
+| `PORT` | Puerto HTTP de la API. |
+| `DB_HOST` | Host de MySQL. |
+| `DB_PORT` | Puerto de MySQL. |
+| `DB_USER` / `DB_USERNAME` | Usuario de MySQL. |
+| `DB_PASSWORD` | Contrasena de MySQL. |
+| `DB_NAME` / `DB_DATABASE` | Base de datos usada por TypeORM. |
+| `JWT_SECRET` | Secreto para firmar tokens JWT. |
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Instalacion y ejecucion
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
+npm run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+La API queda disponible en:
 
-## Resources
+```text
+http://localhost:3000
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+Swagger queda disponible en:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```text
+http://localhost:3000/docs
+```
 
-## Support
+Al iniciar la aplicacion se crean automaticamente los roles base `ADMIN`, `GERENTE` y `DESARROLLADOR` si no existen.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Seed (roles + usuarios base)
 
-## Stay in touch
+Ejecuta:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npm run seed
+```
 
-## License
+Crea/actualiza estos usuarios (idempotente por email):
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- `admin@taskflowpro.com` (ADMIN)
+- `gerente@taskflowpro.com` (GERENTE)
+- `dev@taskflowpro.com` (DESARROLLADOR)
+
+Variables opcionales:
+
+- `SEED_RESET_PASSWORDS=true` (resetea passwords)
+- `SEED_SHOW_PASSWORDS=true` (imprime passwords)
+- `SEED_*_EMAIL/NAME/PASSWORD` para personalizar
+- En `production` está bloqueado salvo `SEED_ALLOW_PROD=true`
+
+## Flujo de prueba en Swagger
+
+1. Registrar usuario: `POST /auth/registro`.
+2. Iniciar sesion: `POST /auth/login`.
+3. Copiar `accessToken`.
+4. Presionar `Authorize` en Swagger y pegar el token.
+5. Probar endpoints segun el rol del usuario.
+
+Ejemplo de registro:
+
+```json
+{
+  "email": "usuario@example.com",
+  "nombre": "Usuario Prueba",
+  "password": "Password123"
+}
+```
+
+Ejemplo de login:
+
+```json
+{
+  "email": "usuario@example.com",
+  "password": "Password123"
+}
+```
+
+## Endpoints principales
+
+### Auth
+
+| Metodo | Ruta | Acceso |
+| --- | --- | --- |
+| `POST` | `/auth/registro` | Publico |
+| `POST` | `/auth/login` | Publico |
+| `GET` | `/auth/perfil` | Autenticado |
+| `GET` | `/auth/validar-token` | Autenticado |
+
+### Usuarios
+
+| Metodo | Ruta | Acceso |
+| --- | --- | --- |
+| `POST` | `/users` | `ADMIN` |
+| `GET` | `/users` | `ADMIN`, `GERENTE` |
+| `GET` | `/users/perfil` | Autenticado |
+| `GET` | `/users/:id` | `ADMIN`, `GERENTE` |
+| `PATCH` | `/users/:id/rol` | `ADMIN` |
+| `PATCH` | `/users/:id` | `ADMIN` |
+| `DELETE` | `/users/:id` | `ADMIN` |
+
+### Proyectos
+
+| Metodo | Ruta | Acceso |
+| --- | --- | --- |
+| `POST` | `/projects` | `ADMIN`, `GERENTE` |
+| `GET` | `/projects` | Autenticado |
+| `GET` | `/projects/:id` | Autenticado |
+| `PATCH` | `/projects/:id` | Creador o `ADMIN` |
+| `DELETE` | `/projects/:id` | `ADMIN` |
+
+### Tareas
+
+| Metodo | Ruta | Acceso |
+| --- | --- | --- |
+| `POST` | `/tasks` | `GERENTE` |
+| `PATCH` | `/tasks/:id/asignar` | `GERENTE` |
+| `GET` | `/tasks/proyecto/:idProyecto` | Autenticado |
+| `PATCH` | `/tasks/:id/estado` | Usuario asignado |
+| `DELETE` | `/tasks/:id` | `ADMIN` |
+
+## Verificacion local
+
+```bash
+npm run build
+npm run test
+```
+
+## Cumplimiento de requisitos
+
+| Requisito | Estado |
+| --- | --- |
+| NestJS API REST por modulos | Cumplido |
+| JWT con `@nestjs/jwt` y `@nestjs/passport` | Cumplido |
+| bcrypt para contrasenas | Cumplido |
+| MySQL con TypeORM | Cumplido |
+| DTOs y validaciones con `class-validator` | Cumplido |
+| Guards y decorador `@Roles()` | Cumplido |
+| Roles `ADMIN`, `GERENTE`, `DESARROLLADOR` | Cumplido |
+| Swagger en `/docs` | Cumplido |
+| `.env.example` | Cumplido |
+| MER documentado | Cumplido en carpeta `Documentacion` |
