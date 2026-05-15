@@ -64,7 +64,11 @@ async function bootstrap() {
         '| `GET /roles` | ✅ | ✅ | ✅ |\n',
     )
     .setVersion('1.0.0')
-    .setContact('Task Flow Pro', 'https://example.com', 'support@taskflowpro.com')
+    .setContact(
+      'Task Flow Pro',
+      'https://example.com',
+      'support@taskflowpro.com',
+    )
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .addServer('http://localhost:3000', 'Desarrollo')
     .addServer('https://api.taskflowpro.com', 'Producción')

@@ -40,7 +40,7 @@ export class Task {
   @Column({ type: 'uuid' })
   idProyecto: string;
 
-  @ManyToOne(() => Project, { onDelete: 'CASCADE', cascade: true })
+  @ManyToOne(() => Project, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'idProyecto' })
   proyecto: Project;
 

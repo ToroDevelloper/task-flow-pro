@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../modules/users/users.service';
 import { User } from '../modules/users/user.entity';
 import { CreateUserDto } from '../dtos/dto-users/create-user.dto';
+import { JwtPayload } from './strategies/jwt.strategy';
 
 export interface LoginResponse {
   accessToken: string;
@@ -23,13 +24,13 @@ export class AuthService {
   async registro(
     email: string,
     nombre: string,
-    contraseña: string,
+    password: string,
   ): Promise<Partial<User>> {
     // El rol por defecto es DESARROLLADOR (lo asigna UsersService si no se indica rolId)
     const createUserDto: CreateUserDto = {
       email,
       nombre,
-      password: contraseña,
+      password,
     };
 
     const usuario = await this.usersService.crear(createUserDto);
@@ -37,8 +38,8 @@ export class AuthService {
     return usuarioSinContraseña;
   }
 
-  async login(email: string, contraseña: string): Promise<LoginResponse> {
-    if (!email || !contraseña) {
+  async login(email: string, password: string): Promise<LoginResponse> {
+    if (!email || !password) {
       throw new BadRequestException('El correo y la contraseña son requeridos');
     }
 
@@ -52,7 +53,7 @@ export class AuthService {
     }
 
     const contraseñaValida = await this.usersService.verificarContraseña(
-      contraseña,
+      password,
       usuario.contraseña,
     );
     if (!contraseñaValida) {
@@ -72,7 +73,7 @@ export class AuthService {
     return { accessToken, usuario: usuarioSinContraseña };
   }
 
-  async validarToken(token: string): Promise<any> {
+  async validarToken(token: string): Promise<JwtPayload> {
     try {
       return this.jwtService.verify(token);
     } catch {

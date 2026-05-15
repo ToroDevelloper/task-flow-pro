@@ -42,7 +42,10 @@ export class User {
     description: 'Rol asignado al usuario',
     type: () => Role,
   })
-  @ManyToOne(() => Role, (role) => role.usuarios, { eager: true, nullable: true })
+  @ManyToOne(() => Role, (role) => role.usuarios, {
+    eager: true,
+    nullable: true,
+  })
   @JoinColumn({ name: 'rol_id' })
   rol: Role;
 

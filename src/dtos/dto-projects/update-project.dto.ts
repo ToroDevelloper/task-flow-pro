@@ -1,19 +1,19 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsDateString } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class UpdateProjectDto {
   @ApiPropertyOptional({
     description: 'Nombre del proyecto',
-    example: 'Sistema de Gestión de Tareas',
+    example: 'Sistema de Gestion de Tareas',
   })
   @IsString()
   @IsOptional()
   nombre?: string;
 
   @ApiPropertyOptional({
-    description: 'Descripción detallada del proyecto',
+    description: 'Descripcion detallada del proyecto',
     example:
-      'Desarrollo de una aplicación web para gestión de proyectos y tareas',
+      'Desarrollo de una aplicacion web para gestion de proyectos y tareas',
   })
   @IsString()
   @IsOptional()

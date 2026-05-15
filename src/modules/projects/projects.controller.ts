@@ -32,7 +32,8 @@ import { ProjectsService } from './projects.service';
 import { Project } from './project.entity';
 import { Role } from '../../common/enums/role.enum';
 import { CreateProjectDto } from '../../dtos/dto-projects/create-project.dto';
-import { UpdateProjectDto } from '../../dtos/dto-projects/response-project.dto';
+import { UpdateProjectDto } from '../../dtos/dto-projects/update-project.dto';
+import { ProjectOwnerOrAdminGuard } from './guards/project-owner-or-admin.guard';
 
 @ApiTags('📁 Projects')
 @ApiBearerAuth('Bearer')
@@ -63,8 +64,7 @@ export class ProjectsController {
     @Request() req: any,
   ): Promise<Project> {
     const creatorId = req.user.id;
-    const creatorRole = req.user.rol?.nombre;
-    return await this.projectsService.crear(dto, creatorId, creatorRole);
+    return await this.projectsService.crear(dto, creatorId);
   }
 
   @ApiOperation({
@@ -130,19 +130,13 @@ export class ProjectsController {
   })
   @ApiNotFoundResponse({ description: 'Proyecto no encontrado' })
   @ApiBadRequestResponse({ description: 'Fechas inválidas' })
+  @UseGuards(JwtAuthGuard, RolesGuard, ProjectOwnerOrAdminGuard)
   @Patch(':id')
   async actualizar(
     @Param('id') id: string,
     @Body() dto: UpdateProjectDto,
-    @Request() req: any,
   ): Promise<Project> {
-    const actorRoleName = req.user.rol?.nombre;
-    return await this.projectsService.actualizar(
-      id,
-      dto,
-      req.user.id,
-      actorRoleName,
-    );
+    return await this.projectsService.actualizar(id, dto);
   }
 
   @ApiOperation({
@@ -161,11 +155,10 @@ export class ProjectsController {
   @ApiUnauthorizedResponse({ description: 'Token no proporcionado o inválido' })
   @ApiForbiddenResponse({ description: 'Solo ADMIN puede eliminar proyectos' })
   @ApiNotFoundResponse({ description: 'Proyecto no encontrado' })
-  @Roles(Role.ADMIN, Role.GERENTE)
+  @Roles(Role.ADMIN)
   @Delete(':id')
   @HttpCode(204)
-  async eliminar(@Param('id') id: string, @Request() req: any): Promise<void> {
-    const actorRole = req.user.rol?.nombre;
-    await this.projectsService.eliminar(id, actorRole);
+  async eliminar(@Param('id') id: string): Promise<void> {
+    await this.projectsService.eliminar(id);
   }
 }

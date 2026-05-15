@@ -2,15 +2,13 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Project } from './project.entity';
 import { CreateProjectDto } from '../../dtos/dto-projects/create-project.dto';
-import { UpdateProjectDto } from '../../dtos/dto-projects/response-project.dto';
+import { UpdateProjectDto } from '../../dtos/dto-projects/update-project.dto';
 import { UsersService } from '../users/users.service';
-import { Role } from '../../common/enums/role.enum';
 
 @Injectable()
 export class ProjectsService {
@@ -21,17 +19,7 @@ export class ProjectsService {
     private dataSource: DataSource,
   ) {}
 
-  async crear(
-    dto: CreateProjectDto,
-    creatorId: string,
-    creatorRole: string,
-  ): Promise<Project> {
-    if (creatorRole !== Role.ADMIN && creatorRole !== Role.GERENTE) {
-      throw new ForbiddenException(
-        'Solo los usuarios con rol ADMIN o GERENTE pueden crear proyectos',
-      );
-    }
-
+  async crear(dto: CreateProjectDto, creatorId: string): Promise<Project> {
     const usuario = await this.usersService.buscarPorId(creatorId);
     if (!usuario) {
       throw new NotFoundException('Usuario creador no encontrado');
@@ -83,21 +71,10 @@ export class ProjectsService {
     return proyecto;
   }
 
-  async actualizar(
-    id: string,
-    datos: UpdateProjectDto,
-    actorId: string,
-    actorRoleName: string,
-  ): Promise<Project> {
+  async actualizar(id: string, datos: UpdateProjectDto): Promise<Project> {
     const proyecto = await this.buscarPorId(id);
     if (!proyecto) {
       throw new NotFoundException('Proyecto no encontrado');
-    }
-
-    if (actorRoleName !== 'ADMIN' && proyecto.idUsuario !== actorId) {
-      throw new ForbiddenException(
-        'Solo el usuario creador del proyecto o un ADMIN pueden actualizarlo',
-      );
     }
 
     if (datos.fechaInicio && datos.fechaFin) {
@@ -137,13 +114,7 @@ export class ProjectsService {
     return await this.projectsRepository.save(proyecto);
   }
 
-  async eliminar(id: string, actorRole: string): Promise<void> {
-    if (actorRole !== Role.ADMIN && actorRole !== Role.GERENTE) {
-      throw new ForbiddenException(
-        'Solo los usuarios con rol ADMIN o GERENTE pueden eliminar proyectos',
-      );
-    }
-
+  async eliminar(id: string): Promise<void> {
     const proyecto = await this.buscarPorId(id);
     if (!proyecto) {
       throw new NotFoundException('Proyecto no encontrado');
