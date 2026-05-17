@@ -5,7 +5,7 @@
 Una vez que el servidor esté ejecutándose:
 
 ```bash
-npm run start:dev
+pnpm run start:dev
 ```
 
 Abre tu navegador en:

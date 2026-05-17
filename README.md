@@ -21,6 +21,9 @@ API REST para gestion interna de proyectos y tareas con autenticacion JWT y cont
 - bcrypt
 - class-validator y DTOs
 - Swagger
+- React + Vite
+- Axios
+- Lucide React
 
 ## Modelo de dominio
 
@@ -72,12 +75,14 @@ Variables usadas:
 | `DB_PASSWORD` | Contrasena de MySQL. |
 | `DB_NAME` / `DB_DATABASE` | Base de datos usada por TypeORM. |
 | `JWT_SECRET` | Secreto para firmar tokens JWT. |
+| `FRONTEND_ORIGIN` | Origenes permitidos para CORS del frontend, separados por coma. |
 
 ## Instalacion y ejecucion
 
 ```bash
-npm install
-npm run start:dev
+pnpm install
+pnpm --prefix frontend install
+pnpm run start:dev
 ```
 
 La API queda disponible en:
@@ -92,7 +97,65 @@ Swagger queda disponible en:
 http://localhost:3000/docs
 ```
 
+El frontend en desarrollo queda disponible en:
+
+```text
+http://127.0.0.1:5173
+```
+
+Para levantar solo el frontend:
+
+```bash
+pnpm run frontend:dev
+```
+
+Para compilarlo:
+
+```bash
+pnpm run frontend:build
+```
+
+Vite usa un proxy local desde `/api` hacia `http://localhost:3000`, por lo que el frontend consume la API Nest sin exponer CORS durante desarrollo. Si quieres usar otra URL, crea `frontend/.env` a partir de `frontend/.env.example` y cambia `VITE_API_BASE_URL`.
+
 Al iniciar la aplicacion se crean automaticamente los roles base `ADMIN`, `GERENTE` y `DESARROLLADOR` si no existen.
+
+## Frontend React + Vite
+
+La app se encuentra en `frontend/` y sigue los mockups de TaskFlow Pro con una interfaz administrativa profesional, sidebar fijo, topbar, tarjetas metricas, formularios, modales y vistas operativas.
+
+Estructura principal:
+
+| Ruta | Modulo |
+| --- | --- |
+| `/login` | Pantalla de inicio de sesion con el logo oficial y visual de producto. |
+| `/dashboard` | Resumen administrativo, metricas y proyectos activos. |
+| `/projects` | Workspace del proyecto con Overview, Tareas, Chat y Actividad. |
+| `/tasks` | Tablero Kanban de tareas con movimiento por drag and drop. |
+| `/calendar` | Calendario de vencimientos y proximas entregas. |
+| `/reports` | Indicadores de avance, distribucion y rendimiento. |
+| `/settings` | Configuracion de notificaciones, horarios y permisos por rol. |
+| `/email-preview` | Vista de correo automatico enviado al asignar una tarea. |
+
+Assets:
+
+- `frontend/public/brand/logo-color.png`
+- `frontend/public/brand/logo-blanco-negro.png`
+
+Cliente HTTP:
+
+- `frontend/src/services/api.js` centraliza Axios.
+- Agrega automaticamente `Authorization: Bearer <token>` si hay sesion real.
+- Desempaqueta respuestas del interceptor global de Nest con forma `{ success, data, timestamp }`.
+- Si la API no esta disponible, la app abre una sesion local de vista previa para validar el diseno sin bloquear la navegacion.
+
+Acciones conectadas:
+
+- Login: `POST /auth/login`.
+- Perfil/listados: `GET /users`, `GET /projects`, `GET /tasks/proyecto/:idProyecto`.
+- Crear proyecto: `POST /projects`.
+- Crear tarea: `POST /tasks`.
+- Asignar tarea: `PATCH /tasks/:id/asignar`.
+- Mover estado de tarea: `PATCH /tasks/:id/estado`.
 
 ## Seed (roles + usuarios base)
 
@@ -189,6 +252,7 @@ Ejemplo de login:
 
 ```bash
 npm run build
+npm run frontend:build
 npm run test
 ```
 
@@ -206,3 +270,5 @@ npm run test
 | Swagger en `/docs` | Cumplido |
 | `.env.example` | Cumplido |
 | MER documentado | Cumplido en carpeta `Documentacion` |
+| Frontend React + Vite con Axios | Cumplido en carpeta `frontend` |
+| Mockups de TaskFlow Pro implementados | Cumplido |
