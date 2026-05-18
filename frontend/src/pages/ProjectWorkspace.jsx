@@ -152,6 +152,7 @@ export default function ProjectWorkspace() {
                   <div>
                     <strong>{task.titulo}</strong>
                     <p>{task.descripcion || 'Sin descripcion'}</p>
+                    {task.fechaFin && <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '4px' }}>Vence: {formatFullDate(task.fechaFin)}</p>}
                   </div>
                   <span className="status-badge status-badge--neutral">{task.estado}</span>
                 </article>

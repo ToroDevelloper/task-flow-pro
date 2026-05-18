@@ -5,6 +5,7 @@ const initialForm = {
   titulo: '',
   descripcion: '',
   idUsuarioAsignado: '',
+  fechaFin: '',
 };
 
 export default function TaskModal({ open, users, onClose, onSubmit, project, role }) {
@@ -63,6 +64,16 @@ export default function TaskModal({ open, users, onClose, onSubmit, project, rol
               onChange={(event) => updateField('descripcion', event.target.value)}
               placeholder="Detalle tecnico"
               rows={4}
+            />
+          </label>
+
+          <label className="field">
+            <span>Fecha de Vencimiento</span>
+            <input
+              type="datetime-local"
+              required
+              value={form.fechaFin}
+              onChange={(event) => updateField('fechaFin', event.target.value)}
             />
           </label>
 
