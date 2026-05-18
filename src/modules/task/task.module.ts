@@ -6,15 +6,9 @@ import { TasksController } from './task.controller';
 import { ProjectsModule } from '../projects/projects.module';
 import { UsersModule } from '../users/users.module';
 import { AssignedUserDeveloperGuard } from './guards/assigned-user-developer.guard';
-import { MailModule } from '../mail/mail.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Task]),
-    ProjectsModule,
-    UsersModule,
-    MailModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Task]), ProjectsModule, UsersModule],
   providers: [TasksService, AssignedUserDeveloperGuard],
   controllers: [TasksController],
   exports: [TasksService],

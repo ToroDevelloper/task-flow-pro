@@ -3,7 +3,6 @@ import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar.jsx';
 import Topbar from './components/Topbar.jsx';
 import TaskModal from './components/TaskModal.jsx';
-import MailSentAlert from './components/MailSentAlert.jsx';
 import ProjectModal from './components/ProjectModal.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Login from './pages/Login.jsx';
@@ -67,8 +66,6 @@ function Shell({
   projectModalOpen,
   closeTaskModal,
   closeProjectModal,
-  mailAlert,
-  setMailAlert,
 }) {
   const outletContext = {
     session,
@@ -116,14 +113,6 @@ function Shell({
         </button>
       ) : null}
 
-      {mailAlert ? (
-        <MailSentAlert
-          email={mailAlert.email}
-          taskTitle={mailAlert.taskTitle}
-          onClose={() => setMailAlert(null)}
-        />
-      ) : null}
-
       <TaskModal
         open={taskModalOpen}
         users={users}
@@ -153,7 +142,6 @@ export default function App() {
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [lastAssignedTask, setLastAssignedTask] = useState(null);
-  const [mailAlert, setMailAlert] = useState(null); // { email, taskTitle }
 
   const accessToken = session?.accessToken || '';
   const role = useMemo(() => toRole(session?.user), [session?.user]);
@@ -321,9 +309,7 @@ export default function App() {
       });
 
       let assignedTask = createdTask;
-      let assignedUser = null;
       if (payload.idUsuarioAsignado) {
-        assignedUser = users.find((u) => u.id === payload.idUsuarioAsignado);
         assignedTask = await taskService.assign(createdTask.id, {
           idUsuarioAsignado: payload.idUsuarioAsignado,
         });
@@ -332,12 +318,7 @@ export default function App() {
       setLastAssignedTask(assignedTask);
       setTaskModalOpen(false);
       await refreshData();
-
-      if (assignedUser && assignedUser.email) {
-        setMailAlert({ email: assignedUser.email, taskTitle: assignedTask.titulo });
-      } else {
-        showNotice('Tarea creada correctamente.');
-      }
+      navigate('/email-preview');
     } catch (error) {
       showNotice(getApiMessage(error));
     }
@@ -472,8 +453,6 @@ export default function App() {
               onDeleteUser={handleDeleteUser}
               onViewUser={handleViewUser}
               onLogout={handleLogout}
-              mailAlert={mailAlert}
-              setMailAlert={setMailAlert}
             />
           ) : (
             <Navigate to="/login" replace />
