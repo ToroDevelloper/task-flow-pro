@@ -11,6 +11,7 @@ import { AssignTaskDto } from '../../dtos/dto-task/assign-task.dto';
 import { ProjectsService } from '../projects/projects.service';
 import { UsersService } from '../users/users.service';
 import { TaskStatus } from '../../common/enums/task-status.enum';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class TasksService {
@@ -19,6 +20,7 @@ export class TasksService {
     private tasksRepository: Repository<Task>,
     private projectsService: ProjectsService,
     private usersService: UsersService,
+    private mailService: MailService,
   ) {}
 
   async crear(dto: CreateTaskDto): Promise<Task> {
@@ -55,7 +57,24 @@ export class TasksService {
     tarea.idUsuarioAsignado = dto.idUsuarioAsignado;
     tarea.usuarioAsignado = usuario;
 
-    return await this.tasksRepository.save(tarea);
+    const tareaGuardada = await this.tasksRepository.save(tarea);
+
+    // Enviar correo de notificación de forma asíncrona para no bloquear el hilo principal (deacoplado)
+    if (usuario.email && usuario.email.includes('@')) {
+      const proyectoNombre = tarea.proyecto ? tarea.proyecto.nombre : 'Proyecto no especificado';
+      
+      // Llamada asíncrona sin await (fire-and-forget)
+      this.mailService.sendTaskAssignmentNotification(
+        usuario.email,
+        proyectoNombre,
+        tarea.titulo,
+        tarea.estado,
+      ).catch(() => {
+        // Los errores internos ya se manejan con logs en el MailService
+      });
+    }
+
+    return tareaGuardada;
   }
 
   async listarPorProyecto(idProyecto: string): Promise<Task[]> {
