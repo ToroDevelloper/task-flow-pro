@@ -60,19 +60,15 @@ export class TasksService {
 
     const tareaGuardada = await this.tasksRepository.save(tarea);
 
-    // Enviar correo de notificación de forma asíncrona para no bloquear el hilo principal (deacoplado)
     if (usuario.email && usuario.email.includes('@')) {
       const proyectoNombre = tarea.proyecto ? tarea.proyecto.nombre : 'Proyecto no especificado';
       
-      // Llamada asíncrona sin await (fire-and-forget)
       this.mailService.sendTaskAssignmentNotification(
         usuario.email,
         proyectoNombre,
         tarea.titulo,
         tarea.estado,
-      ).catch(() => {
-        // Los errores internos ya se manejan con logs en el MailService
-      });
+      ).catch(() => {});
     }
 
     return tareaGuardada;
@@ -103,7 +99,6 @@ export class TasksService {
       throw new NotFoundException('Tarea no encontrada');
     }
 
-    // Lógica estricta: Solo el usuario que tiene la tarea asignada puede realizar este cambio
     if (tarea.idUsuarioAsignado !== idUsuario) {
       throw new ForbiddenException(
         'Solo el usuario asignado a esta tarea puede actualizar su estado',
@@ -124,5 +119,29 @@ export class TasksService {
     }
 
     await this.tasksRepository.remove(tarea);
+  }
+
+  // ── HU3: Mover tarea desde el tablero Kanban ─────────────────────
+  async moverTarea(
+    id: string,
+    nuevoEstado: TaskStatus,
+    idUsuario: string,
+    rolUsuario: string,
+  ): Promise<Task> {
+    const tarea = await this.tasksRepository.findOne({ where: { id } });
+
+    if (!tarea) {
+      throw new NotFoundException('Tarea no encontrada');
+    }
+
+    const esAdminOGerente = ['ADMIN', 'GERENTE'].includes(rolUsuario?.toUpperCase());
+    const esAsignado = tarea.idUsuarioAsignado === idUsuario;
+
+    if (!esAsignado && !esAdminOGerente) {
+      throw new ForbiddenException('No tienes permisos para mover esta tarea.');
+    }
+
+    tarea.estado = nuevoEstado;
+    return await this.tasksRepository.save(tarea);
   }
 }
