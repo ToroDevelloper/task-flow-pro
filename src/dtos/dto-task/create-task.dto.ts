@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsUUID, IsDateString } from 'class-validator';
 
 export class CreateTaskDto {
   @ApiProperty({
@@ -22,4 +22,12 @@ export class CreateTaskDto {
   @IsUUID()
   @IsNotEmpty()
   idProyecto: string;
+
+  @ApiProperty({
+    description: 'Fecha y hora de finalización o vencimiento de la tarea',
+    example: '2026-12-31T23:59:59Z',
+  })
+  @IsDateString()
+  @IsNotEmpty()
+  fechaFin: Date;
 }

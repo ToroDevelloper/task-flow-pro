@@ -33,6 +33,7 @@ export class TasksService {
       titulo: dto.titulo,
       descripcion: dto.descripcion,
       idProyecto: dto.idProyecto,
+      fechaFin: dto.fechaFin,
       proyecto,
     });
 

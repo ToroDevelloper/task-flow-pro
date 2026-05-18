@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
-import { statusColumns } from '../utils/formatters';
+import { statusColumns, formatFullDate } from '../utils/formatters';
 
 export default function TasksBoard() {
   const { session, role, tasks, onMoveTask, onDeleteTask } = useOutletContext();
@@ -60,6 +60,7 @@ export default function TasksBoard() {
                     <MoreHorizontal size={18} />
                   </div>
                   <h3>{task.titulo}</h3>
+                  {task.fechaFin && <p style={{ fontSize: '12px', color: '#ef4444', marginBottom: '8px' }}>Vence: {formatFullDate(task.fechaFin)}</p>}
                   <footer>
                     <span>{task.usuarioAsignado?.nombre || 'Sin asignar'}</span>
                     {canDeleteTask ? (

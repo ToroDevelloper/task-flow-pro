@@ -61,4 +61,18 @@ export class Task {
 
   @UpdateDateColumn()
   fechaActualizacion: Date;
+
+  @ApiProperty({
+    description: 'Fecha y hora de finalización o vencimiento de la tarea',
+    required: true,
+  })
+  @Column({ type: 'timestamp', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
+  fechaFin: Date;
+
+  @ApiProperty({
+    description: 'Indica si ya se envió el recordatorio de 24h',
+    default: false,
+  })
+  @Column({ type: 'boolean', default: false })
+  recordatorioEnviado: boolean;
 }

@@ -7,6 +7,7 @@ import { ProjectsModule } from '../projects/projects.module';
 import { UsersModule } from '../users/users.module';
 import { AssignedUserDeveloperGuard } from './guards/assigned-user-developer.guard';
 import { MailModule } from '../mail/mail.module';
+import { TaskCronService } from './task-cron.service';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { MailModule } from '../mail/mail.module';
     UsersModule,
     MailModule,
   ],
-  providers: [TasksService, AssignedUserDeveloperGuard],
+  providers: [TasksService, AssignedUserDeveloperGuard, TaskCronService],
   controllers: [TasksController],
   exports: [TasksService],
 })
