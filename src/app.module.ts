@@ -9,7 +9,11 @@ import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { TasksModule } from './modules/task/task.module';
+<<<<<<< Updated upstream
 import { MailModule } from './modules/mail/mail.module';
+=======
+import { ChatModule } from './modules/chat/chat.module';
+>>>>>>> Stashed changes
 
 @Module({
   imports: [
@@ -21,7 +25,11 @@ import { MailModule } from './modules/mail/mail.module';
     UsersModule,
     ProjectsModule,
     TasksModule,
+<<<<<<< Updated upstream
     MailModule,
+=======
+    ChatModule,
+>>>>>>> Stashed changes
   ],
   controllers: [AppController],
   providers: [AppService],
