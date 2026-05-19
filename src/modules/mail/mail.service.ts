@@ -32,7 +32,13 @@ export class MailService {
     estado: string,
   ): Promise<void> {
     try {
-      const logoPath = path.join(process.cwd(), 'frontend', 'public', 'brand', 'logo-color.png');
+      const logoPath = path.join(
+        process.cwd(),
+        'frontend',
+        'public',
+        'brand',
+        'logo-color.png',
+      );
 
       await this.transporter.sendMail({
         from: `"Task Flow Pro" <${this.configService.get<string>('SMTP_USER')}>`,
@@ -213,7 +219,10 @@ export class MailService {
       });
       this.logger.log(`Correo de notificación enviado exitosamente a ${email}`);
     } catch (error) {
-      this.logger.error(`Error enviando correo a ${email}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error enviando correo a ${email}: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
@@ -224,13 +233,23 @@ export class MailService {
     fechaFin: Date,
   ): Promise<void> {
     try {
-      const logoPath = path.join(process.cwd(), 'frontend', 'public', 'brand', 'logo-color.png');
-      
+      const logoPath = path.join(
+        process.cwd(),
+        'frontend',
+        'public',
+        'brand',
+        'logo-color.png',
+      );
+
       // Formatear la fecha para mostrar la hora exacta de vencimiento
       const formatter = new Intl.DateTimeFormat('es-ES', {
-        year: 'numeric', month: 'long', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-        timeZoneName: 'short'
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short',
       });
       const fechaVencimientoFormateada = formatter.format(new Date(fechaFin));
 
@@ -411,9 +430,14 @@ export class MailService {
           },
         ],
       });
-      this.logger.log(`Correo de alerta de vencimiento enviado exitosamente a ${email}`);
+      this.logger.log(
+        `Correo de alerta de vencimiento enviado exitosamente a ${email}`,
+      );
     } catch (error) {
-      this.logger.error(`Error enviando correo de alerta a ${email}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error enviando correo de alerta a ${email}: ${error.message}`,
+        error.stack,
+      );
     }
   }
 }

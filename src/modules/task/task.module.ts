@@ -24,7 +24,12 @@ import { KanbanGateway } from './kanban/kanban.gateway';
       }),
     }),
   ],
-  providers: [TasksService, AssignedUserDeveloperGuard, TaskCronService, KanbanGateway],
+  providers: [
+    TasksService,
+    AssignedUserDeveloperGuard,
+    TaskCronService,
+    KanbanGateway,
+  ],
   controllers: [TasksController],
   exports: [TasksService],
 })
