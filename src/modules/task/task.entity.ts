@@ -66,7 +66,11 @@ export class Task {
     description: 'Fecha y hora de finalización o vencimiento de la tarea',
     required: true,
   })
-  @Column({ type: 'timestamp', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: 'timestamp',
+    nullable: false,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   fechaFin: Date;
 
   @ApiProperty({

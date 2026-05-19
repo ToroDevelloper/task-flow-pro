@@ -82,7 +82,10 @@ export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const next = queue.then(() =>
       this.procesarMovimiento(dto, client, payload),
     );
-    this.processingQueues.set(dto.taskId, next.catch(() => {}));
+    this.processingQueues.set(
+      dto.taskId,
+      next.catch(() => {}),
+    );
   }
 
   private async procesarMovimiento(
@@ -93,7 +96,7 @@ export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       await this.tasksService.moverTarea(
         dto.taskId,
-        dto.newStatus as TaskStatus,
+        dto.newStatus,
         payload.sub,
         payload.rol,
       );
@@ -108,9 +111,9 @@ export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server
         .to(`project:${dto.projectId}`)
         .emit('task_updated', broadcastPayload);
-
     } catch (error) {
-      const mensaje = error instanceof Error ? error.message : 'Error al mover la tarea.';
+      const mensaje =
+        error instanceof Error ? error.message : 'Error al mover la tarea.';
       client.emit('task_move_error', {
         taskId: dto.taskId,
         previousStatus: dto.previousStatus,

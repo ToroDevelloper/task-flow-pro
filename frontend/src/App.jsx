@@ -314,10 +314,16 @@ export default function App() {
   const handleCreateTask = async (payload) => {
     if (!canCreateTask || !payload?.idProyecto) return;
     try {
+      const fechaFinDate = payload.fechaFin ? new Date(payload.fechaFin) : null;
+      const fechaFin =
+        fechaFinDate && !Number.isNaN(fechaFinDate.getTime())
+          ? fechaFinDate.toISOString()
+          : payload.fechaFin;
       const createdTask = await taskService.create({
         titulo: payload.titulo,
         descripcion: payload.descripcion,
         idProyecto: payload.idProyecto,
+        fechaFin,
       });
 
       let assignedTask = createdTask;
