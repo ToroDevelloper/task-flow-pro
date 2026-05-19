@@ -11,6 +11,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../users/user.entity';
 import { Task } from '../task/task.entity';
+import { Message } from '../chat/entities/message.entity';
 
 @Entity('proyectos')
 export class Project {
@@ -76,6 +77,21 @@ export class Project {
   })
   @OneToMany(() => Task, (tarea) => tarea.proyecto)
   tareas: Task[];
+
+  /**
+   * Relación One-to-Many: Un proyecto puede tener múltiples mensajes en su chat grupal
+   * Se utiliza lazy loading para evitar cargar automáticamente todos los mensajes
+   */
+  @ApiProperty({
+    type: () => [Object],
+    description: 'Mensajes del chat grupal del proyecto',
+  })
+  @OneToMany(() => Message, (message) => message.project, {
+    cascade: true,
+    eager: false,
+    orphanedRowAction: 'delete',
+  })
+  messages: Message[];
 
   @ApiProperty({
     format: 'date-time',
