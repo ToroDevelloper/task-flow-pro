@@ -26,6 +26,7 @@ export function useSocket() {
 
     return () => {
       // Limpiar al desmontar
+      disconnectSocket();
     };
   }, []);
 

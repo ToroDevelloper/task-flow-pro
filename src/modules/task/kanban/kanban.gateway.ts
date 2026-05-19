@@ -15,7 +15,24 @@ import { JwtService } from '@nestjs/jwt';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 
 @WebSocketGateway({
-  cors: { origin: '*' },
+  cors: {
+    origin: (origin, callback) => {
+      const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:4000',
+        'http://127.0.0.1:4000',
+      ];
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  },
   namespace: '/kanban',
 })
 export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {

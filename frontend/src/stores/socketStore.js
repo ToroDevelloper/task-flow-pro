@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { io } from 'socket.io-client';
 import { getStoredSession } from '../services/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:4000';
 
 export const useSocketStore = create((set, get) => {
   let socket = null;
@@ -36,6 +36,7 @@ export const useSocketStore = create((set, get) => {
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
         reconnectionAttempts: 5,
+        transports: ['websocket', 'polling'],
       });
 
       socket.on('connect', () => {
@@ -67,11 +68,13 @@ export const useSocketStore = create((set, get) => {
       });
 
       socket.on('newMessage', (message) => {
+        const msgProjectId = message.projectId || message.idProyecto;
+        if (!msgProjectId) return;
         set((state) => ({
           messages: {
             ...state.messages,
-            [state.currentProject]: [
-              ...(state.messages[state.currentProject] || []),
+            [msgProjectId]: [
+              ...(state.messages[msgProjectId] || []),
               message,
             ],
           },

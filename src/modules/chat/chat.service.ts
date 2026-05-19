@@ -1,8 +1,10 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto } from './dtos/create-message.dto';
+import { Project } from '../projects/project.entity';
+import { Task } from '../task/task.entity';
 
 /**
  * Servicio de Chat
@@ -22,6 +24,10 @@ export class ChatService {
   constructor(
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
   ) {}
 
   /**
@@ -110,38 +116,66 @@ export class ChatService {
   }
 
   /**
-   * Valida si un usuario pertenece a un proyecto
+   * Valida si un usuario tiene acceso a un proyecto
    *
-   * NOTA: Esta es una función simulada. En producción, debería verificar
-   * si el usuario tiene asignado un rol en el proyecto mediante la tabla de relaciones.
+   * Un usuario tiene acceso si:
+   * 1. Es el creador del proyecto, O
+   * 2. Tiene una tarea asignada en ese proyecto
    *
    * @param userId - ID del usuario
    * @param projectId - ID del proyecto
-   * @returns Promise<boolean> - true si el usuario pertenece al proyecto
+   * @returns Promise<boolean> - true si el usuario tiene acceso al proyecto
+   * @throws NotFoundException - Si el proyecto no existe
    *
    * @example
-   * const belongsToProject = await chatService.validateUserProjectAccess(userId, projectId);
+   * const hasAccess = await chatService.validateUserProjectAccess(userId, projectId);
    */
   async validateUserProjectAccess(userId: string, projectId: string): Promise<boolean> {
     try {
-      // TODO: Implementar verificación real con UserProject o tabla de relaciones
-      // Por ahora simulamos que el acceso es válido
-      // En producción, consultar:
-      // SELECT * FROM user_projects WHERE user_id = $1 AND project_id = $2
-      
-      this.logger.debug(
-        `Validando acceso del usuario ${userId} al proyecto ${projectId}`,
-      );
+      // Verificar que el proyecto existe
+      const project = await this.projectRepository.findOne({
+        where: { id: projectId },
+      });
 
-      // Simulación: siempre retorna true
-      // En producción, debería verificar la relación en la BD
-      return true;
+      if (!project) {
+        this.logger.warn(`Proyecto no encontrado: ${projectId}`);
+        throw new NotFoundException(`Proyecto con ID ${projectId} no existe`);
+      }
+
+      // Validación 1: ¿Es el usuario el creador del proyecto?
+      if (project.idUsuario === userId) {
+        this.logger.debug(
+          `✓ Usuario ${userId} es creador del proyecto ${projectId}`,
+        );
+        return true;
+      }
+
+      // Validación 2: ¿Tiene una tarea asignada en este proyecto?
+      const assignedTask = await this.taskRepository.findOne({
+        where: {
+          idProyecto: projectId,
+          idUsuarioAsignado: userId,
+        },
+      });
+
+      if (assignedTask) {
+        this.logger.debug(
+          `✓ Usuario ${userId} tiene tarea asignada en proyecto ${projectId}`,
+        );
+        return true;
+      }
+
+      // Si no cumple ninguna condición, no tiene acceso
+      this.logger.warn(
+        `✗ Usuario ${userId} no tiene acceso al proyecto ${projectId}`,
+      );
+      return false;
     } catch (error) {
       this.logger.error(
         `Error al validar acceso a proyecto: ${error.message}`,
         error.stack,
       );
-      return false;
+      throw error;
     }
   }
 
