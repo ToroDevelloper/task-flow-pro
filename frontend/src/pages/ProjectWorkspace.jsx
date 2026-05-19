@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { CheckCircle2, Folder } from 'lucide-react';
 import { formatFullDate } from '../utils/formatters';
+import ChatPanel from '../components/ChatPanel';
 
 export default function ProjectWorkspace() {
   const {
@@ -66,7 +67,7 @@ export default function ProjectWorkspace() {
         ) : null}
       </div>
 
-      <div className="settings-layout">
+      <div className="settings-layout" style={{ display: 'flex', gap: '16px', height: 'calc(100vh - 200px)' }}>
         <aside className="settings-menu">
           {(projects || []).map((project) => (
             <button
@@ -80,7 +81,7 @@ export default function ProjectWorkspace() {
           ))}
         </aside>
 
-        <div className="settings-stack">
+        <div className="settings-stack" style={{ flex: 1, overflowY: 'auto' }}>
           <article className="settings-card">
             <div className="settings-card__header settings-card__header--split">
               <h2>Detalle del proyecto</h2>
@@ -160,6 +161,13 @@ export default function ProjectWorkspace() {
             </div>
           </article>
         </div>
+
+        {/* Chat Panel - Columna derecha */}
+        {selectedProjectId && (
+          <div style={{ width: '380px', display: 'flex', flexDirection: 'column' }}>
+            <ChatPanel projectId={selectedProjectId} projectName={currentProject?.nombre || 'Proyecto'} />
+          </div>
+        )}
       </div>
     </section>
   );
