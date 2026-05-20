@@ -1527,6 +1527,12 @@ p {
   font-size: 16px;
 }
 
+.board-controls {
+  display: grid;
+  gap: 10px;
+  min-width: 280px;
+}
+
 .board-project-filter {
   display: grid;
   gap: 8px;
@@ -1548,6 +1554,33 @@ p {
   border: 1px solid var(--border);
   border-radius: 8px;
   outline: 0;
+}
+
+.board-scope-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  min-height: 40px;
+  padding: 4px;
+  background: #eceef3;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.board-scope-toggle button {
+  min-height: 30px;
+  color: #4a505c;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.board-scope-toggle button.is-active {
+  color: var(--navy);
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
 }
 
 .board-context {

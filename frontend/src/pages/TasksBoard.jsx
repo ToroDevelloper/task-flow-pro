@@ -9,15 +9,17 @@ export default function TasksBoard() {
   const { session, role, projects, tasks, onMoveTask, onDeleteTask, selectedProjectId, onSelectProject } = useOutletContext();
   const [draggedTask, setDraggedTask] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [taskScope, setTaskScope] = useState('mine');
   const token  = session?.accessToken ?? null;
   const userId = session?.user?.id    ?? null;
   const projectTasks = useMemo(
     () => {
       const byProject = selectedProjectId ? tasks.filter((t) => t.idProyecto === selectedProjectId) : [];
       if (role !== 'DESARROLLADOR') return byProject;
+      if (taskScope === 'project') return byProject;
       return byProject.filter((task) => task.idUsuarioAsignado === session?.user?.id);
     },
-    [role, session?.user?.id, tasks, selectedProjectId],
+    [role, session?.user?.id, taskScope, tasks, selectedProjectId],
   );
   const currentProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) || null,
@@ -102,18 +104,38 @@ export default function TasksBoard() {
       <div className="page-heading page-heading--board">
         <div>
           <h1>Tablero de tareas</h1>
-          <p>{role === 'DESARROLLADOR' ? 'Tus tareas por proyecto' : 'Todas las tareas del proyecto seleccionado'}</p>
+          <p>{role === 'DESARROLLADOR' ? 'Tareas del proyecto con filtro personal' : 'Todas las tareas del proyecto seleccionado'}</p>
         </div>
-        <label className="board-project-filter">
-          <span>Proyecto</span>
-          <select value={selectedProjectId || ''} onChange={(event) => onSelectProject(event.target.value)}>
-            {(projects || []).map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="board-controls">
+          <label className="board-project-filter">
+            <span>Proyecto</span>
+            <select value={selectedProjectId || ''} onChange={(event) => onSelectProject(event.target.value)}>
+              {(projects || []).map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+          {role === 'DESARROLLADOR' ? (
+            <div className="board-scope-toggle" aria-label="Filtro de tareas">
+              <button
+                className={taskScope === 'mine' ? 'is-active' : ''}
+                type="button"
+                onClick={() => setTaskScope('mine')}
+              >
+                Mis tareas
+              </button>
+              <button
+                className={taskScope === 'project' ? 'is-active' : ''}
+                type="button"
+                onClick={() => setTaskScope('project')}
+              >
+                Todas
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="board-context">
