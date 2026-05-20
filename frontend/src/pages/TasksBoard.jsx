@@ -4,73 +4,56 @@ import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { statusColumns, formatFullDate } from '../utils/formatters';
 import { useTaskSocket } from '../hooks/useTaskSocket';
 
-// Lee el JWT del almacenamiento — ajusta la clave si tu app usa otra
-function getToken() {
-  return (
-    localStorage.getItem('token') ||
-    localStorage.getItem('accessToken') ||
-    sessionStorage.getItem('token') ||
-    null
-  );
-}
-
-function getUserIdFromToken(token) {
-  if (!token) return null;
-  try {
-    return JSON.parse(atob(token.split('.')[1]))?.sub ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export default function TasksBoard() {
-  const { session, role, tasks, onMoveTask, onDeleteTask, projectId } = useOutletContext();
+
+  const { session, role, tasks, onMoveTask, onDeleteTask, selectedProjectId } = useOutletContext();
   const [draggedTask, setDraggedTask] = useState(null);
+  const token  = session?.accessToken ?? null;
+  const userId = session?.user?.id    ?? null;
+  const projectTasks = useMemo(
+    () => (selectedProjectId ? tasks.filter((t) => t.idProyecto === selectedProjectId) : tasks),
+    [tasks, selectedProjectId],
+  );
 
-  const [localTasks, setLocalTasks] = useState(tasks ?? []);
+  // Copia local para aplicar cambios en tiempo real sin esperar al padre
+  const [localTasks, setLocalTasks] = useState(projectTasks);
 
+  // Sincronizar cuando el padre recarga o cambia de proyecto
   useEffect(() => {
-    setLocalTasks(tasks ?? []);
-  }, [tasks]);
+    setLocalTasks(projectTasks);
+  }, [projectTasks]);
 
-  // ── WebSocket 
-  const token  = getToken();
-  const userId = session?.user?.id ?? getUserIdFromToken(token);
+  // ── WebSocket ──────────────────────────────────────────────────────────────
 
   const handleRemoteTaskMoved = useCallback(({ taskId, newStatus }) => {
     setLocalTasks((prev) =>
-      prev.map((t) => (String(t.id) === String(taskId) ? { ...t, estado: newStatus } : t))
+      prev.map((t) => String(t.id) === String(taskId) ? { ...t, estado: newStatus } : t)
     );
   }, []);
 
   const handleMoveError = useCallback(({ taskId, previousStatus, message }) => {
     console.warn(`[Kanban] Rollback tarea ${taskId} → ${previousStatus}:`, message);
     setLocalTasks((prev) =>
-      prev.map((t) => (String(t.id) === String(taskId) ? { ...t, estado: previousStatus } : t))
+      prev.map((t) => String(t.id) === String(taskId) ? { ...t, estado: previousStatus } : t)
     );
   }, []);
 
-  const { emitTaskMoved } = useTaskSocket({
-    projectId,
+  const { emitTaskMoved, isConnected } = useTaskSocket({
+    projectId: selectedProjectId,
     token,
     userId,
     onTaskMoved: handleRemoteTaskMoved,
     onMoveError: handleMoveError,
   });
 
-  // ── Lógica existente (sin cambios)
   const canDeleteTask = role === 'ADMIN';
 
   const groupedTasks = useMemo(() => {
-    const source =
-      role === 'DESARROLLADOR'
-        ? localTasks.filter((task) => task.idUsuarioAsignado === session?.user?.id)
-        : localTasks;
-    return statusColumns.reduce((acc, column) => {
-      acc[column.id] = source.filter((task) => task.estado === column.id);
-      return acc;
+  return statusColumns.reduce((acc, column) => {
+    acc[column.id] = localTasks.filter((task) => task.estado === column.id);
+    return acc;
     }, {});
-  }, [role, session?.user?.id, localTasks]);
+  }, [localTasks]);
 
   const canMoveTask = (task) =>
     role !== 'DESARROLLADOR' || task.idUsuarioAsignado === session?.user?.id;
@@ -84,15 +67,17 @@ export default function TasksBoard() {
       return;
     }
 
-    // 1. Optimistic update local inmediato
     setLocalTasks((prev) =>
       prev.map((t) =>
         String(t.id) === String(draggedTask.id) ? { ...t, estado: newStatus } : t
       )
     );
 
+    const enviado = emitTaskMoved(draggedTask.id, newStatus, previousStatus);
 
-    emitTaskMoved(draggedTask.id, newStatus, previousStatus);
+    if (!enviado) {
+      onMoveTask(draggedTask.id, newStatus);
+    }
 
     setDraggedTask(null);
   };
@@ -102,11 +87,7 @@ export default function TasksBoard() {
       <div className="page-heading page-heading--board">
         <div>
           <h1>Tablero de tareas</h1>
-          <p>
-            {role === 'DESARROLLADOR'
-              ? 'Solo tus tareas asignadas'
-              : 'Todas las tareas del sistema'}
-          </p>
+          <p>{role === 'DESARROLLADOR' ? 'Solo tus tareas asignadas' : 'Todas las tareas del sistema'}</p>
         </div>
       </div>
 
