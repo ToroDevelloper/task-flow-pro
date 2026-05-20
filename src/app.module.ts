@@ -10,6 +10,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { TasksModule } from './modules/task/task.module';
 import { MailModule } from './modules/mail/mail.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MailModule } from './modules/mail/mail.module';
     ProjectsModule,
     TasksModule,
     MailModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

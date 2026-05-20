@@ -9,7 +9,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const frontendOrigins = (
-    process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173,http://127.0.0.1:5173'
+    process.env.FRONTEND_ORIGIN ??
+    'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174'
   )
     .split(',')
     .map((origin) => origin.trim())
@@ -40,6 +41,8 @@ async function bootstrap() {
   // ══════════════════════════════════════════════════════════════
   // CONFIGURACIÓN SWAGGER
   // ══════════════════════════════════════════════════════════════
+  const port = process.env.PORT ?? 3000;
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle('🚀 TaskFlow Pro API')
     .setDescription(
@@ -82,7 +85,7 @@ async function bootstrap() {
       'support@taskflowpro.com',
     )
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
-    .addServer('http://localhost:3000', 'Desarrollo')
+    .addServer(`http://localhost:${port}`, 'Desarrollo')
     .addServer('https://api.taskflowpro.com', 'Producción')
     .addBearerAuth(
       {
@@ -115,7 +118,6 @@ async function bootstrap() {
     ],
   });
 
-  const port = process.env.PORT ?? 3000;
   await app.listen(port);
 
   console.log(`\n✅ Servidor ejecutándose en: http://localhost:${port}`);

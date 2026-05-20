@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../roles/role.entity';
+import { Message } from '../chat/entities/message.entity';
 
 @Entity('usuarios')
 export class User {
@@ -72,4 +74,19 @@ export class User {
   })
   @UpdateDateColumn()
   fechaActualizacion: Date;
+
+  /**
+   * Relación One-to-Many: Un usuario puede enviar múltiples mensajes en chats de proyectos
+   * Se utiliza lazy loading para evitar cargar automáticamente todos los mensajes
+   */
+  @ApiProperty({
+    type: () => [Object],
+    description: 'Mensajes enviados por el usuario en chats de proyectos',
+  })
+  @OneToMany(() => Message, (message) => message.sender, {
+    cascade: true,
+    eager: false,
+    orphanedRowAction: 'delete',
+  })
+  messages: Message[];
 }

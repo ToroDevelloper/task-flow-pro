@@ -14,12 +14,13 @@ export class TaskCronService {
     @InjectRepository(Task)
     private tasksRepository: Repository<Task>,
     private mailService: MailService,
-  ) { }
-
+  ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleTaskDueReminders() {
-    this.logger.log('Iniciando proceso de verificación de tareas próximas a vencer...');
+    this.logger.log(
+      'Iniciando proceso de verificación de tareas próximas a vencer...',
+    );
 
     const ahora = new Date();
     const dentroDe24Horas = new Date();
@@ -36,16 +37,22 @@ export class TaskCronService {
       });
 
       if (tareasProximas.length === 0) {
-        this.logger.log('No hay tareas próximas a vencer que requieran recordatorio.');
+        this.logger.log(
+          'No hay tareas próximas a vencer que requieran recordatorio.',
+        );
         return;
       }
 
-      this.logger.log(`Se encontraron ${tareasProximas.length} tareas próximas a vencer.`);
+      this.logger.log(
+        `Se encontraron ${tareasProximas.length} tareas próximas a vencer.`,
+      );
 
       for (const tarea of tareasProximas) {
         if (!tarea.usuarioAsignado || !tarea.usuarioAsignado.email) continue;
 
-        const projectName = tarea.proyecto ? tarea.proyecto.nombre : 'Proyecto no especificado';
+        const projectName = tarea.proyecto
+          ? tarea.proyecto.nombre
+          : 'Proyecto no especificado';
 
         // Enviar correo de recordatorio
         await this.mailService.sendTaskDueReminderNotification(
@@ -59,12 +66,19 @@ export class TaskCronService {
         tarea.recordatorioEnviado = true;
         await this.tasksRepository.save(tarea);
 
-        this.logger.log(`Recordatorio enviado a ${tarea.usuarioAsignado.email} para la tarea: ${tarea.titulo}`);
+        this.logger.log(
+          `Recordatorio enviado a ${tarea.usuarioAsignado.email} para la tarea: ${tarea.titulo}`,
+        );
       }
 
-      this.logger.log('Proceso de verificación de tareas próximas a vencer finalizado.');
+      this.logger.log(
+        'Proceso de verificación de tareas próximas a vencer finalizado.',
+      );
     } catch (error) {
-      this.logger.error('Error durante el proceso de verificación de tareas: ' + error.message, error.stack);
+      this.logger.error(
+        'Error durante el proceso de verificación de tareas: ' + error.message,
+        error.stack,
+      );
     }
   }
 }

@@ -22,12 +22,18 @@ export class MoveTaskDto {
   @IsNotEmpty()
   previousStatus: TaskStatus;
 
-  @ApiProperty({ format: 'uuid', description: 'ID del usuario que mueve la tarea' })
+  @ApiProperty({
+    format: 'uuid',
+    description: 'ID del usuario que mueve la tarea',
+  })
   @IsUUID('4', { message: 'userId debe ser un UUID válido' })
   @IsNotEmpty()
   userId: string;
 
-  @ApiProperty({ format: 'uuid', description: 'ID del proyecto (sala WebSocket)' })
+  @ApiProperty({
+    format: 'uuid',
+    description: 'ID del proyecto (sala WebSocket)',
+  })
   @IsUUID('4', { message: 'projectId debe ser un UUID válido' })
   @IsNotEmpty()
   projectId: string;
