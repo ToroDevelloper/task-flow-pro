@@ -1504,36 +1504,103 @@ p {
 }
 
 .board-page {
-  width: min(1120px, calc(100% - 90px));
-  padding-top: 52px;
+  display: flex;
+  flex-direction: column;
+  width: min(1280px, calc(100% - 56px));
+  height: calc(100dvh - var(--topbar));
+  min-height: 0;
+  padding: 28px 0 24px;
+  overflow: hidden;
 }
 
 .page-heading--board {
-  margin-bottom: 48px;
+  flex: 0 0 auto;
+  margin-bottom: 18px;
 }
 
-.kanban-board {
+.board-page .page-heading h1 {
+  font-size: 32px;
+}
+
+.board-page .page-heading p {
+  margin-top: 6px;
+  font-size: 16px;
+}
+
+.board-project-filter {
   display: grid;
-  grid-template-columns: repeat(3, 326px);
-  gap: 26px;
-  align-items: start;
-  overflow-x: auto;
-  padding-bottom: 38px;
+  gap: 8px;
+  min-width: 280px;
+  color: var(--text);
+  font-weight: 800;
 }
 
-.kanban-column {
-  min-height: 650px;
-  background: #f2f2f6;
+.board-project-filter span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.board-project-filter select {
+  min-height: 48px;
+  padding: 0 14px;
+  color: var(--text);
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: 0;
+}
+
+.board-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 0 0 auto;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
 
+.board-context span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(270px, 1fr));
+  gap: 18px;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.kanban-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 270px;
+  min-height: 0;
+  background: #f2f2f6;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 .kanban-column header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 56px;
-  padding: 0 16px;
+  flex: 0 0 auto;
+  min-height: 46px;
+  padding: 0 12px;
+  background: #f2f2f6;
   border-bottom: 1px solid var(--border);
 }
 
@@ -1551,9 +1618,15 @@ p {
 }
 
 .kanban-column__body {
-  display: grid;
-  gap: 14px;
-  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 220px;
+  padding: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .drop-zone {
@@ -1567,7 +1640,9 @@ p {
 }
 
 .task-card {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
   gap: 14px;
   min-height: 146px;
   padding: 16px;
@@ -1575,6 +1650,11 @@ p {
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: var(--shadow-sm);
+}
+
+.task-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
 }
 
 .task-card--featured {
@@ -1611,6 +1691,11 @@ p {
   color: #4f5560;
 }
 
+.task-card footer {
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
 .priority {
   display: inline-flex;
   align-items: center;
@@ -1639,6 +1724,66 @@ p {
 
 .priority--baja {
   color: #777d88;
+}
+
+.task-detail-float {
+  position: fixed;
+  z-index: 55;
+  right: 28px;
+  bottom: 28px;
+  width: min(420px, calc(100vw - 56px));
+  max-height: min(620px, calc(100vh - 56px));
+  overflow-y: auto;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.task-detail-float__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.task-detail-float__header h2 {
+  margin-top: 12px;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 22px;
+  line-height: 1.24;
+}
+
+.task-detail-float__list {
+  display: grid;
+  gap: 0;
+  margin: 12px 0 0;
+}
+
+.task-detail-float__list div {
+  display: grid;
+  gap: 6px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e3e5e9;
+}
+
+.task-detail-float__list div:last-child {
+  border-bottom: 0;
+}
+
+.task-detail-float__list dt {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.task-detail-float__list dd {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.4;
 }
 
 .settings-page {

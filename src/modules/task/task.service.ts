@@ -126,7 +126,6 @@ async moverTarea(
     id: string,
     nuevoEstado: TaskStatus,
     idUsuario: string,
-    rolUsuario: string,
     projectId: string,
   ): Promise<Task> {
     const tarea = await this.tasksRepository.findOne({ where: { id } });
@@ -139,11 +138,12 @@ async moverTarea(
       throw new ForbiddenException('La tarea no pertenece a este proyecto.');
     }
 
-    const esAdminOGerente = ['ADMIN', 'GERENTE'].includes(rolUsuario?.toUpperCase());
     const esAsignado = tarea.idUsuarioAsignado === idUsuario;
 
-    if (!esAsignado && !esAdminOGerente) {
-      throw new ForbiddenException('No tienes permisos para mover esta tarea.');
+    if (!esAsignado) {
+      throw new ForbiddenException(
+        'Solo el desarrollador asignado puede mover esta tarea.',
+      );
     }
 
     tarea.estado = nuevoEstado;

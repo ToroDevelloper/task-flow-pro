@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Message } from './entities/message.entity';
 import { Project } from '../projects/project.entity';
 import { Task } from '../task/task.entity';
+import { User } from '../users/user.entity';
 import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './gateways/chat.gateway';
@@ -38,7 +39,7 @@ import { WsExceptionFilter } from './filters/ws-exception.filter';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Message, Project, Task]),
+    TypeOrmModule.forFeature([Message, Project, Task, User]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

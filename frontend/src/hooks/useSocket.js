@@ -23,11 +23,6 @@ export function useSocket() {
   // Inicializar socket cuando se monta el componente
   useEffect(() => {
     initializeSocket();
-
-    return () => {
-      // Limpiar al desmontar
-      disconnectSocket();
-    };
   }, []);
 
   return {

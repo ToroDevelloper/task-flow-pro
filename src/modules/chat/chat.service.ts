@@ -5,6 +5,7 @@ import { Message } from './entities/message.entity';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { Project } from '../projects/project.entity';
 import { Task } from '../task/task.entity';
+import { User } from '../users/user.entity';
 
 /**
  * Servicio de Chat
@@ -28,6 +29,8 @@ export class ChatService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   /**
@@ -143,6 +146,19 @@ export class ChatService {
       }
 
       // Validación 1: ¿Es el usuario el creador del proyecto?
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['rol'],
+      });
+      const roleName = user?.rol?.nombre?.toUpperCase();
+
+      if (roleName === 'ADMIN' || roleName === 'GERENTE') {
+        this.logger.debug(
+          `Usuario ${userId} accede por rol ${roleName} al proyecto ${projectId}`,
+        );
+        return true;
+      }
+
       if (project.idUsuario === userId) {
         this.logger.debug(
           `✓ Usuario ${userId} es creador del proyecto ${projectId}`,

@@ -4,13 +4,17 @@ import { Clock3 } from 'lucide-react';
 import { formatFullDate } from '../utils/formatters';
 
 export default function Calendar() {
-  const { tasks } = useOutletContext();
+  const { session, role, tasks } = useOutletContext();
+  const visibleTasks = useMemo(() => {
+    if (role !== 'DESARROLLADOR') return tasks;
+    return tasks.filter((task) => task.idUsuarioAsignado === session?.user?.id);
+  }, [role, session?.user?.id, tasks]);
   const orderedTasks = useMemo(
     () =>
-      [...tasks].sort(
+      [...visibleTasks].sort(
         (a, b) => new Date(a.fechaCreacion || 0).getTime() - new Date(b.fechaCreacion || 0).getTime(),
       ),
-    [tasks],
+    [visibleTasks],
   );
 
   return (
@@ -31,6 +35,7 @@ export default function Calendar() {
             </div>
           </article>
         ))}
+        {!orderedTasks.length ? <p>No hay tareas para mostrar.</p> : null}
       </div>
     </section>
   );
