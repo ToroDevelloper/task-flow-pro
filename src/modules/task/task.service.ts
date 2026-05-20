@@ -61,18 +61,14 @@ export class TasksService {
     const tareaGuardada = await this.tasksRepository.save(tarea);
 
     if (usuario.email && usuario.email.includes('@')) {
-      const proyectoNombre = tarea.proyecto
-        ? tarea.proyecto.nombre
-        : 'Proyecto no especificado';
-
-      this.mailService
-        .sendTaskAssignmentNotification(
-          usuario.email,
-          proyectoNombre,
-          tarea.titulo,
-          tarea.estado,
-        )
-        .catch(() => {});
+      const proyectoNombre = tarea.proyecto ? tarea.proyecto.nombre : 'Proyecto no especificado';
+      
+      this.mailService.sendTaskAssignmentNotification(
+        usuario.email,
+        proyectoNombre,
+        tarea.titulo,
+        tarea.estado,
+      ).catch(() => {});
     }
 
     return tareaGuardada;
@@ -125,12 +121,13 @@ export class TasksService {
     await this.tasksRepository.remove(tarea);
   }
 
-  // ── HU3: Mover tarea desde el tablero Kanban ─────────────────────
-  async moverTarea(
+ // ── HU3: Mover tarea desde el tablero Kanban ─────────────────────
+async moverTarea(
     id: string,
     nuevoEstado: TaskStatus,
     idUsuario: string,
     rolUsuario: string,
+    projectId: string,
   ): Promise<Task> {
     const tarea = await this.tasksRepository.findOne({ where: { id } });
 
@@ -138,9 +135,11 @@ export class TasksService {
       throw new NotFoundException('Tarea no encontrada');
     }
 
-    const esAdminOGerente = ['ADMIN', 'GERENTE'].includes(
-      rolUsuario?.toUpperCase(),
-    );
+    if (tarea.idProyecto !== projectId) {
+      throw new ForbiddenException('La tarea no pertenece a este proyecto.');
+    }
+
+    const esAdminOGerente = ['ADMIN', 'GERENTE'].includes(rolUsuario?.toUpperCase());
     const esAsignado = tarea.idUsuarioAsignado === idUsuario;
 
     if (!esAsignado && !esAdminOGerente) {

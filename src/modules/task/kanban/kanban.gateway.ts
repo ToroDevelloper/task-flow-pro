@@ -15,28 +15,7 @@ import { JwtService } from '@nestjs/jwt';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 
 @WebSocketGateway({
-  cors: {
-    origin: (origin, callback) => {
-      const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'http://localhost:4000',
-        'http://127.0.0.1:4000',
-      ];
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        allowedOrigins.includes('*')
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-  },
+  cors: { origin: '*' },
   namespace: '/kanban',
 })
 export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -64,21 +43,46 @@ export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Cliente desconectado: ${client.id}`);
   }
 
+  // ── Punto 6: join_project verifica que el usuario tiene JWT válido ──
   @SubscribeMessage('join_project')
   async handleJoinProject(
     @MessageBody() data: { projectId: string },
     @ConnectedSocket() client: Socket,
   ) {
+    const payload = this.extractJwt(client);
+    if (!payload) {
+      client.emit('error', { message: 'No autorizado para unirse al proyecto.' });
+      client.disconnect();
+      return;
+    }
+
+    if (!data?.projectId) {
+      client.emit('error', { message: 'projectId es requerido.' });
+      return;
+    }
+
     await client.join(`project:${data.projectId}`);
     client.emit('joined', { room: `project:${data.projectId}` });
   }
 
+  // ── Punto 7: ValidationPipe endurece estados invalidos ──────────
   @SubscribeMessage('task_moved')
-  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      // Punto 7: ante payload invalido lanza excepcion que capturamos
+      exceptionFactory: (errors) => {
+        const mensajes = errors.map((e) => Object.values(e.constraints ?? {}).join(', ')).join(' | ');
+        return new Error(`Payload invalido: ${mensajes}`);
+      },
+    }),
+  )
   async handleTaskMoved(
     @MessageBody() dto: MoveTaskDto,
     @ConnectedSocket() client: Socket,
   ) {
+    // Punto 7: si el DTO no es válido el pipe ya lanzó error antes de llegar aquí
     const payload = this.extractJwt(client);
     if (!payload) {
       client.emit('task_move_error', {
@@ -103,10 +107,7 @@ export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const next = queue.then(() =>
       this.procesarMovimiento(dto, client, payload),
     );
-    this.processingQueues.set(
-      dto.taskId,
-      next.catch(() => {}),
-    );
+    this.processingQueues.set(dto.taskId, next.catch(() => {}));
   }
 
   private async procesarMovimiento(
@@ -115,11 +116,13 @@ export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {
     payload: any,
   ) {
     try {
+      // Punto 6: se pasa projectId para validar que taskId pertenece al proyecto
       await this.tasksService.moverTarea(
         dto.taskId,
-        dto.newStatus,
+        dto.newStatus as TaskStatus,
         payload.sub,
         payload.rol,
+        dto.projectId,
       );
 
       const broadcastPayload = {
@@ -132,9 +135,9 @@ export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server
         .to(`project:${dto.projectId}`)
         .emit('task_updated', broadcastPayload);
+
     } catch (error) {
-      const mensaje =
-        error instanceof Error ? error.message : 'Error al mover la tarea.';
+      const mensaje = error instanceof Error ? error.message : 'Error al mover la tarea.';
       client.emit('task_move_error', {
         taskId: dto.taskId,
         previousStatus: dto.previousStatus,

@@ -1,20 +1,24 @@
-import { useEffect, useRef, useCallback } from 'react';
+// frontend/src/hooks/useTaskSocket.js
+
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { io } from 'socket.io-client';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'http://127.0.0.1:3000';
+// Deriva la URL del servidor WS desde la misma variable que usa api.js.
+// Si VITE_API_BASE_URL es relativa (/api) usamos localhost:3000 en desarrollo.
+// Si es absoluta (http://servidor:3000/api) le quitamos el path /api.
+function resolveWsUrl() {
+  const apiUrl = import.meta.env.VITE_API_BASE_URL;
+  if (apiUrl && apiUrl.startsWith('http')) {
+    return apiUrl.replace(/\/api\/?$/, '');
+  }
+  return import.meta.env.VITE_WS_URL || 'http://localhost:3000';
+}
 
-/**
- * @param {object}        opts
- * @param {string|number} opts.projectId   – ID del proyecto (Room)
- * @param {string}        opts.token       – JWT del usuario autenticado
- * @param {string}        opts.userId      – sub del JWT (requerido por MoveTaskDto)
- * @param {Function}      opts.onTaskMoved – Callback cuando otro usuario mueve una tarea
- *                                           Recibe: { taskId, newStatus, previousStatus, userId }
- * @param {Function}      opts.onMoveError – Callback cuando el servidor rechaza el movimiento
- *                                           
- */
+const WS_URL = resolveWsUrl();
+
 export function useTaskSocket({ projectId, token, userId, onTaskMoved, onMoveError }) {
   const socketRef = useRef(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     if (!projectId || !token) return;
@@ -28,52 +32,46 @@ export function useTaskSocket({ projectId, token, userId, onTaskMoved, onMoveErr
 
     socketRef.current = socket;
 
-    socket.on('connect', () => {
+    const joinRoom = () => {
       socket.emit('join_project', { projectId, token });
-    });
+      setIsConnected(true);
+    };
 
-   
+    socket.on('connect',   joinRoom);
+    socket.on('reconnect', joinRoom);
+
     socket.on('task_updated', (payload) => {
-      // payload: { taskId, newStatus, previousStatus, userId }
       onTaskMoved?.(payload);
     });
 
     socket.on('task_move_error', (payload) => {
-      // payload: { taskId, previousStatus, message }
       onMoveError?.(payload);
     });
 
+    socket.on('disconnect',    () => setIsConnected(false));
     socket.on('connect_error', (err) => {
       console.warn('[WS] Error de conexión:', err.message);
+      setIsConnected(false);
     });
 
     return () => {
-      if (socket.connected) {
-        socket.emit('leave_project', { projectId });
-      }
+      if (socket.connected) socket.emit('leave_project', { projectId });
       socket.disconnect();
       socketRef.current = null;
+      setIsConnected(false);
     };
-  }, [projectId, token]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [projectId, token]); 
 
-
+  // Retorna true si el evento se envió, false si el socket no estaba listo
   const emitTaskMoved = useCallback(
     (taskId, newStatus, previousStatus) => {
       const socket = socketRef.current;
-      if (!socket?.connected) {
-        console.warn('[WS] Socket desconectado. El movimiento no se sincronizará en tiempo real.');
-        return;
-      }
-      socket.emit('task_moved', {
-        taskId,
-        newStatus,
-        previousStatus,
-        userId,   
-        projectId,
-      });
+      if (!socket?.connected) return false;
+      socket.emit('task_moved', { taskId, newStatus, previousStatus, userId, projectId });
+      return true;
     },
     [projectId, userId],
   );
 
-  return { emitTaskMoved };
+  return { emitTaskMoved, isConnected };
 }
