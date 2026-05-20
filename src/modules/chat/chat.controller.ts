@@ -29,7 +29,8 @@ export class ChatController {
   @Get('messages/:projectId')
   @ApiOperation({
     summary: '📜 Obtener historial de mensajes',
-    description: 'Recupera los últimos mensajes de un proyecto específico. Solo accesible para usuarios con acceso al proyecto.',
+    description:
+      'Recupera los últimos mensajes de un proyecto específico. Solo accesible para usuarios con acceso al proyecto.',
   })
   @ApiParam({ name: 'projectId', description: 'ID del proyecto' })
   @ApiOkResponse({ description: 'Historial recuperado exitosamente' })
@@ -41,9 +42,12 @@ export class ChatController {
     @Req() req?: any,
   ) {
     const userId = req.user.id;
-    
+
     // Validar que el usuario tenga acceso al proyecto
-    const hasAccess = await this.chatService.validateUserProjectAccess(userId, projectId);
+    const hasAccess = await this.chatService.validateUserProjectAccess(
+      userId,
+      projectId,
+    );
     if (!hasAccess) {
       throw new ForbiddenException('No tienes acceso a este proyecto');
     }

@@ -18,12 +18,12 @@ export class WsExceptionFilter implements NestWsExceptionFilter {
    */
   catch(exception: any, host: ArgumentsHost) {
     const client = host.switchToWs().getClient<Socket>();
-    
+
     // Loguear el error para depuraciÃ³n en el servidor
     console.error('[WsExceptionFilter] Capturando error:', {
       message: exception.message,
       stack: exception.stack,
-      response: exception.getResponse ? exception.getResponse() : null
+      response: exception.getResponse ? exception.getResponse() : null,
     });
 
     let eventData: any;
@@ -54,7 +54,9 @@ export class WsExceptionFilter implements NestWsExceptionFilter {
               : exception.message,
           statusCode,
           details:
-            typeof response === 'object' && 'error' in response ? response : undefined,
+            typeof response === 'object' && 'error' in response
+              ? response
+              : undefined,
         },
       };
     }

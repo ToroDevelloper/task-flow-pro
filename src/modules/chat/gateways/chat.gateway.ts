@@ -143,18 +143,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.userId = 'debug-user';
         client.userEmail = 'debug@test.com';
         client.projectsJoined = new Set<string>();
-        
+
         client.emit('connected', {
           success: true,
           userId: client.userId,
           debug: true,
         });
-        
+
         // Registrar sesión activa
         if (!this.activeUsers.has(client.userId)) {
           this.activeUsers.set(client.userId, new Set());
         }
-        this.activeUsers.get(client.userId)!.add(client.id);
+        this.activeUsers.get(client.userId).add(client.id);
         return;
       }
 
@@ -179,7 +179,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!this.activeUsers.has(client.userId)) {
         this.activeUsers.set(client.userId, new Set());
       }
-      this.activeUsers.get(client.userId)!.add(client.id);
+      this.activeUsers.get(client.userId).add(client.id);
 
       this.logger.log(
         `✓ Socket conectado: ${client.id} -> Usuario ${client.userId}`,
@@ -194,11 +194,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         `Fallo en conexión de socket: ${error.message}`,
         error.stack,
       );
-      this.emitError(
-        client,
-        'CONNECTION_ERROR',
-        'Error al conectar socket.',
-      );
+      this.emitError(client, 'CONNECTION_ERROR', 'Error al conectar socket.');
       client.disconnect(true);
     }
   }
@@ -235,7 +231,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Remover de la lista de usuarios activos
       if (this.activeUsers.has(client.userId)) {
-        const userSockets = this.activeUsers.get(client.userId)!;
+        const userSockets = this.activeUsers.get(client.userId);
         userSockets.delete(client.id);
 
         // Si el usuario no tiene más sockets conectados, remover completamente
@@ -308,11 +304,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       // Validación: Verificar que el usuario pertenece al proyecto
-      const hasAccess =
-        await this.chatService.validateUserProjectAccess(
-          client.userId,
-          projectId,
-        );
+      const hasAccess = await this.chatService.validateUserProjectAccess(
+        client.userId,
+        projectId,
+      );
 
       if (!hasAccess) {
         this.logger.warn(
@@ -497,11 +492,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       // Validación: Verificar acceso al proyecto
-      const hasAccess =
-        await this.chatService.validateUserProjectAccess(
-          client.userId,
-          projectId,
-        );
+      const hasAccess = await this.chatService.validateUserProjectAccess(
+        client.userId,
+        projectId,
+      );
 
       if (!hasAccess) {
         this.logger.warn(
@@ -584,11 +578,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       // Validar acceso
-      const hasAccess =
-        await this.chatService.validateUserProjectAccess(
-          client.userId,
-          projectId,
-        );
+      const hasAccess = await this.chatService.validateUserProjectAccess(
+        client.userId,
+        projectId,
+      );
 
       if (!hasAccess) {
         return this.emitError(
@@ -614,11 +607,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         `Error al cargar historial: ${error.message}`,
         error.stack,
       );
-      this.emitError(
-        client,
-        'SERVER_ERROR',
-        'Error al cargar el historial.',
-      );
+      this.emitError(client, 'SERVER_ERROR', 'Error al cargar el historial.');
     }
   }
 

@@ -2,7 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from '../chat.service';
 import { Message } from '../entities/message.entity';
@@ -44,7 +51,7 @@ describe('ChatGateway', () => {
     get: jest.fn<any>((key: string) => {
       const config: Record<string, any> = {
         JWT_SECRET: 'test-secret',
-        'JWT_EXPIRATION': '24h',
+        JWT_EXPIRATION: '24h',
         CORS_ORIGINS: 'http://localhost:3000,http://localhost:3001',
       };
       return config[key];
@@ -148,9 +155,7 @@ describe('ChatGateway', () => {
     it('debe rechazar conexión con token JWT expirado', async () => {
       const expiredToken = 'expired-jwt-token';
 
-      mockJwtService.verifyAsync.mockRejectedValue(
-        new Error('jwt expired'),
-      );
+      mockJwtService.verifyAsync.mockRejectedValue(new Error('jwt expired'));
 
       const mockClient = {
         id: 'socket-123',
@@ -198,9 +203,7 @@ describe('ChatGateway', () => {
       jest
         .spyOn(chatService, 'validateUserProjectAccess')
         .mockResolvedValue(true);
-      jest
-        .spyOn(chatService, 'getProjectMessages')
-        .mockResolvedValue([]);
+      jest.spyOn(chatService, 'getProjectMessages').mockResolvedValue([]);
 
       await gateway.handleJoinProject(mockClient, { projectId });
 
