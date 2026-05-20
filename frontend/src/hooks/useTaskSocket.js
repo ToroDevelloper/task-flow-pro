@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'http://127.0.0.1:3000';
+const WS_URL = import.meta.env.VITE_WS_URL || 'http://127.0.0.1:4000';
 
 /**
  * @param {object}        opts

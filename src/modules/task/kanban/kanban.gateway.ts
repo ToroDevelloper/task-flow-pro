@@ -25,11 +25,7 @@ import { TaskStatus } from '../../../common/enums/task-status.enum';
         'http://localhost:4000',
         'http://127.0.0.1:4000',
       ];
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        allowedOrigins.includes('*')
-      ) {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

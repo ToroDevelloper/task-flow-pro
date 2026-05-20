@@ -45,8 +45,7 @@ import { WsExceptionFilter } from './filters/ws-exception.filter';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
         signOptions: {
-          expiresIn: (configService.get<string>('JWT_EXPIRATION') ||
-            '24h') as any,
+          expiresIn: (configService.get<string>('JWT_EXPIRATION') || '24h') as any,
         },
       }),
     }),
