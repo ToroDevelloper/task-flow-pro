@@ -2,7 +2,15 @@ import { create } from 'zustand';
 import { io } from 'socket.io-client';
 import { getStoredSession } from '../services/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:4000';
+function resolveSocketUrl() {
+  const apiUrl = import.meta.env.VITE_API_BASE_URL;
+  if (apiUrl && apiUrl.startsWith('http')) {
+    return apiUrl.replace(/\/api\/?$/, '');
+  }
+  return import.meta.env.VITE_WS_URL || 'http://localhost:3000';
+}
+
+const API_BASE_URL = resolveSocketUrl();
 
 export const useSocketStore = create((set, get) => {
   let socket = null;
@@ -25,7 +33,11 @@ export const useSocketStore = create((set, get) => {
       }
 
       if (socket) {
-        socket.disconnect();
+        if (!socket.connected) {
+          socket.connect();
+        }
+        set({ socket, isConnected: socket.connected });
+        return;
       }
 
       socket = io(`${API_BASE_URL}/chat`, {
@@ -102,6 +114,10 @@ export const useSocketStore = create((set, get) => {
         return;
       }
 
+      if (state.currentProject === projectId) {
+        return;
+      }
+
       state.socket.emit('joinProject', { projectId });
       set({ currentProject: projectId });
       console.log(`👥 Unido al proyecto: ${projectId}`);
@@ -112,6 +128,10 @@ export const useSocketStore = create((set, get) => {
       const state = get();
       if (!state.socket || !state.isConnected) {
         console.warn('Socket no está conectado');
+        return;
+      }
+
+      if (state.currentProject !== projectId) {
         return;
       }
 

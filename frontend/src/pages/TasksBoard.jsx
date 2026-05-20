@@ -1,18 +1,29 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
-import { statusColumns, formatFullDate } from '../utils/formatters';
+import { MoreHorizontal, Trash2, X } from 'lucide-react';
+import { statusColumns, formatFullDate, statusLabel } from '../utils/formatters';
 import { useTaskSocket } from '../hooks/useTaskSocket';
 
 export default function TasksBoard() {
 
-  const { session, role, tasks, onMoveTask, onDeleteTask, selectedProjectId } = useOutletContext();
+  const { session, role, projects, tasks, onMoveTask, onDeleteTask, selectedProjectId, onSelectProject } = useOutletContext();
   const [draggedTask, setDraggedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [taskScope, setTaskScope] = useState('mine');
   const token  = session?.accessToken ?? null;
   const userId = session?.user?.id    ?? null;
   const projectTasks = useMemo(
-    () => (selectedProjectId ? tasks.filter((t) => t.idProyecto === selectedProjectId) : tasks),
-    [tasks, selectedProjectId],
+    () => {
+      const byProject = selectedProjectId ? tasks.filter((t) => t.idProyecto === selectedProjectId) : [];
+      if (role !== 'DESARROLLADOR') return byProject;
+      if (taskScope === 'project') return byProject;
+      return byProject.filter((task) => task.idUsuarioAsignado === session?.user?.id);
+    },
+    [role, session?.user?.id, taskScope, tasks, selectedProjectId],
+  );
+  const currentProject = useMemo(
+    () => projects.find((project) => project.id === selectedProjectId) || null,
+    [projects, selectedProjectId],
   );
 
   // Copia local para aplicar cambios en tiempo real sin esperar al padre
@@ -21,6 +32,13 @@ export default function TasksBoard() {
   // Sincronizar cuando el padre recarga o cambia de proyecto
   useEffect(() => {
     setLocalTasks(projectTasks);
+  }, [projectTasks]);
+
+  useEffect(() => {
+    setSelectedTask((current) => {
+      if (!current) return null;
+      return projectTasks.find((task) => task.id === current.id) || null;
+    });
   }, [projectTasks]);
 
   // ── WebSocket ──────────────────────────────────────────────────────────────
@@ -55,8 +73,7 @@ export default function TasksBoard() {
     }, {});
   }, [localTasks]);
 
-  const canMoveTask = (task) =>
-    role !== 'DESARROLLADOR' || task.idUsuarioAsignado === session?.user?.id;
+  const canMoveTask = (task) => task.idUsuarioAsignado === session?.user?.id;
 
   const dropTask = (newStatus) => {
     if (!draggedTask) return;
@@ -87,8 +104,43 @@ export default function TasksBoard() {
       <div className="page-heading page-heading--board">
         <div>
           <h1>Tablero de tareas</h1>
-          <p>{role === 'DESARROLLADOR' ? 'Solo tus tareas asignadas' : 'Todas las tareas del sistema'}</p>
+          <p>{role === 'DESARROLLADOR' ? 'Tareas del proyecto con filtro personal' : 'Todas las tareas del proyecto seleccionado'}</p>
         </div>
+        <div className="board-controls">
+          <label className="board-project-filter">
+            <span>Proyecto</span>
+            <select value={selectedProjectId || ''} onChange={(event) => onSelectProject(event.target.value)}>
+              {(projects || []).map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+          {role === 'DESARROLLADOR' ? (
+            <div className="board-scope-toggle" aria-label="Filtro de tareas">
+              <button
+                className={taskScope === 'mine' ? 'is-active' : ''}
+                type="button"
+                onClick={() => setTaskScope('mine')}
+              >
+                Mis tareas
+              </button>
+              <button
+                className={taskScope === 'project' ? 'is-active' : ''}
+                type="button"
+                onClick={() => setTaskScope('project')}
+              >
+                Todas
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="board-context">
+        <strong>{currentProject?.nombre || 'Sin proyecto seleccionado'}</strong>
+        <span>{localTasks.length} tareas visibles</span>
       </div>
 
       <div className="kanban-board">
@@ -110,9 +162,11 @@ export default function TasksBoard() {
                   key={task.id}
                   draggable={canMoveTask(task)}
                   onDragStart={() => setDraggedTask(task)}
+                  onDragEnd={() => setDraggedTask(null)}
+                  onClick={() => setSelectedTask(task)}
                 >
                   <div className="task-card__top">
-                    <span className="priority">{task.estado}</span>
+                    <span className="priority">{statusLabel[task.estado] || task.estado}</span>
                     <MoreHorizontal size={18} />
                   </div>
                   <h3>{task.titulo}</h3>
@@ -127,7 +181,10 @@ export default function TasksBoard() {
                       <button
                         className="icon-button"
                         type="button"
-                        onClick={() => onDeleteTask(task.id)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onDeleteTask(task.id);
+                        }}
                         aria-label="Eliminar tarea"
                       >
                         <Trash2 size={16} />
@@ -140,6 +197,38 @@ export default function TasksBoard() {
           </section>
         ))}
       </div>
+
+      {selectedTask ? (
+        <aside className="task-detail-float" aria-label="Detalle de tarea">
+          <div className="task-detail-float__header">
+            <div>
+              <span className="priority">{statusLabel[selectedTask.estado] || selectedTask.estado}</span>
+              <h2>{selectedTask.titulo}</h2>
+            </div>
+            <button className="icon-button" type="button" onClick={() => setSelectedTask(null)} aria-label="Cerrar detalle">
+              <X size={18} />
+            </button>
+          </div>
+          <dl className="task-detail-float__list">
+            <div>
+              <dt>Proyecto</dt>
+              <dd>{currentProject?.nombre || '-'}</dd>
+            </div>
+            <div>
+              <dt>Asignado</dt>
+              <dd>{selectedTask.usuarioAsignado?.nombre || 'Sin asignar'}</dd>
+            </div>
+            <div>
+              <dt>Fecha fin</dt>
+              <dd>{formatFullDate(selectedTask.fechaFin)}</dd>
+            </div>
+            <div>
+              <dt>Descripcion</dt>
+              <dd>{selectedTask.descripcion || 'Sin descripcion'}</dd>
+            </div>
+          </dl>
+        </aside>
+      ) : null}
     </section>
   );
 }

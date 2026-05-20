@@ -165,9 +165,23 @@ export default function App() {
   const canAdminUsers = role === 'ADMIN';
 
   const tasks = useMemo(() => Object.values(tasksByProject).flat(), [tasksByProject]);
+  const visibleProjects = useMemo(() => {
+    if (role !== 'DESARROLLADOR') return projects;
+
+    const userId = session?.user?.id;
+    if (!userId) return [];
+
+    const assignedProjectIds = new Set(
+      tasks
+        .filter((task) => task.idUsuarioAsignado === userId)
+        .map((task) => task.idProyecto),
+    );
+
+    return projects.filter((project) => assignedProjectIds.has(project.id));
+  }, [projects, role, session?.user?.id, tasks]);
   const currentProject = useMemo(
-    () => projects.find((project) => project.id === selectedProjectId) || null,
-    [projects, selectedProjectId],
+    () => visibleProjects.find((project) => project.id === selectedProjectId) || null,
+    [visibleProjects, selectedProjectId],
   );
 
   const showNotice = useCallback((message) => {
@@ -234,6 +248,14 @@ export default function App() {
   useEffect(() => {
     refreshData();
   }, [refreshData]);
+
+  useEffect(() => {
+    setSelectedProjectId((current) => {
+      if (!visibleProjects.length) return '';
+      if (current && visibleProjects.some((project) => project.id === current)) return current;
+      return visibleProjects[0].id;
+    });
+  }, [visibleProjects]);
 
   useEffect(() => {
     if (!selectedProjectId) {
@@ -447,7 +469,7 @@ export default function App() {
             <Shell
               session={session}
               role={role}
-              projects={projects}
+              projects={visibleProjects}
               users={users}
               roles={roles}
               tasks={tasks}

@@ -121,7 +121,6 @@ export class KanbanGateway implements OnGatewayConnection, OnGatewayDisconnect {
         dto.taskId,
         dto.newStatus as TaskStatus,
         payload.sub,
-        payload.rol,
         dto.projectId,
       );
 
