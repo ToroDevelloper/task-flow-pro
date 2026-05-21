@@ -380,6 +380,67 @@ socket.on('error', (error) => {
 
 ---
 
+## ✅ Prueba en tiempo real con 2 usuarios (Postman)
+
+Esta guía prueba el chat en vivo con **dos usuarios distintos** conectados al mismo proyecto.
+
+1. **Arranca la API y crea usuarios base.**  
+   Ejecuta `npm run start:dev` y luego `npm run seed` para tener usuarios ADMIN/GERENTE/DESARROLLADOR.
+
+2. **Obtén 2 tokens JWT (HTTP).**  
+   En Postman crea 2 requests HTTP `POST http://localhost:3000/auth/login`.  
+   Usuario A (ADMIN):
+   ```json
+   { "email": "admin@taskflowpro.com", "password": "Admin123!" }
+   ```
+   Usuario B (GERENTE o DEV):
+   ```json
+   { "email": "gerente@taskflowpro.com", "password": "Gerente123!" }
+   ```
+   Copia `accessToken` de cada respuesta.
+
+3. **Crea un proyecto (con el admin).**  
+   `POST http://localhost:3000/projects` con **Authorization: Bearer TOKEN_A** y body:
+   ```json
+   {
+     "nombre": "Proyecto Chat Prueba",
+     "descripcion": "Proyecto para pruebas WebSocket",
+     "fechaInicio": "2026-05-21"
+   }
+   ```
+   Copia el `id` del proyecto (lo usarás como `projectId`).
+
+4. **Abre 2 conexiones Socket.IO en Postman (dos pestañas).**  
+   En cada pestaña:
+   - URL: `http://localhost:3000/chat`
+   - Headers: `Authorization: Bearer <TOKEN_A>` en la pestaña 1, y `Authorization: Bearer <TOKEN_B>` en la pestaña 2
+   - Click **Connect**
+
+5. **Agrega listeners en ambas pestañas (Events).**  
+   Registra: `connected`, `joinedProject`, `newMessage`, `userJoinedProject`, `userLeftProject`, `error`.
+
+6. **Une a ambos usuarios al mismo proyecto.**  
+   En cada pestaña (Message):
+   - Event name: `joinProject`
+   - Body (JSON):
+     ```json
+     { "projectId": "TU_PROJECT_ID" }
+     ```
+   Debes recibir `joinedProject` en cada cliente. En la otra pestaña verás `userJoinedProject`.
+
+7. **Intercambia mensajes en tiempo real.**  
+   En pestaña A:
+   - Event name: `sendMessage`
+   - Body (JSON):
+     ```json
+     { "content": "Hola desde A", "projectId": "TU_PROJECT_ID" }
+     ```
+   En pestaña B debe aparecer `newMessage`. Repite desde B para ver el mensaje en A.
+
+> Si el usuario B es DEV y no tiene acceso, usa ADMIN/GERENTE o asigna una tarea al DEV en ese proyecto para que pase la validación.
+
+---
+
 ## 🧪 Testing
 
 ### Test de Conexión

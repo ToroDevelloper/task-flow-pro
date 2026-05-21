@@ -205,6 +205,92 @@ Ejemplo de login:
 }
 ```
 
+## Prueba Kanban en tiempo real (Postman)
+
+Esta prueba valida el **WebSocket Kanban** con dos usuarios conectados al mismo proyecto y un movimiento de tarea en vivo.
+
+1. **Levanta la API y crea usuarios base.**  
+   Ejecuta `npm run start:dev` y luego `npm run seed`.
+
+2. **Obtén 2 tokens JWT.**  
+   En Postman crea 2 requests **POST**:
+   - `http://localhost:3000/auth/login` (GERENTE):
+     ```json
+     { "email": "gerente@taskflowpro.com", "password": "Gerente123!" }
+     ```
+   - `http://localhost:3000/auth/login` (DEV):
+     ```json
+     { "email": "dev@taskflowpro.com", "password": "Dev123!" }
+     ```
+   Copia `accessToken` y el `usuario.id` del DEV (lo usarás como `userId`).
+
+3. **Crea un proyecto (GERENTE).**  
+   **POST** `http://localhost:3000/projects` con **Authorization: Bearer TOKEN_GERENTE** y body:
+   ```json
+   {
+     "nombre": "Proyecto Kanban Prueba",
+     "descripcion": "Proyecto para probar Kanban WS",
+     "fechaInicio": "2026-05-21"
+   }
+   ```
+   Copia el `id` del proyecto como `PROJECT_ID`.
+
+4. **Crea una tarea (GERENTE).**  
+   **POST** `http://localhost:3000/tasks` con **Authorization: Bearer TOKEN_GERENTE** y body:
+   ```json
+   {
+     "titulo": "Mover tarea en Kanban",
+     "descripcion": "Prueba WS Kanban",
+     "idProyecto": "PROJECT_ID",
+     "fechaFin": "2026-12-31T23:59:59Z"
+   }
+   ```
+   Copia el `id` de la tarea como `TASK_ID`.
+
+5. **Asigna la tarea al DEV (GERENTE).**  
+   **PATCH** `http://localhost:3000/tasks/TASK_ID/asignar`  
+   Body:
+   ```json
+   { "idUsuarioAsignado": "DEV_USER_ID" }
+   ```
+
+6. **Abre 2 conexiones Socket.IO en Postman.**  
+   En dos pestañas distintas:
+   - URL: `http://localhost:3000/kanban`
+   - Headers: `Authorization: Bearer TOKEN_DEV` (pestaña 1) y `Authorization: Bearer TOKEN_GERENTE` (pestaña 2)
+   - Click **Connect**
+
+7. **Agrega listeners en ambas pestañas (Events).**  
+   Registra: `joined`, `task_updated`, `task_move_error`, `error`.
+
+8. **Une a ambos al proyecto.**  
+   En cada pestaña (Message):
+   - Event name: `join_project`
+   - Body:
+     ```json
+     { "projectId": "PROJECT_ID" }
+     ```
+   Debes recibir `joined` con `room: project:PROJECT_ID`.
+
+9. **Mueve la tarea desde el DEV.**  
+   En la pestaña del DEV:
+   - Event name: `task_moved`
+   - Body:
+     ```json
+     {
+       "taskId": "TASK_ID",
+       "newStatus": "en_progreso",
+       "previousStatus": "pendiente",
+       "userId": "DEV_USER_ID",
+       "projectId": "PROJECT_ID"
+     }
+     ```
+   En ambas pestañas debe llegar `task_updated`.
+
+**Notas:**  
+- `newStatus` y `previousStatus` solo aceptan `pendiente`, `en_progreso`, `completada`.  
+- Si el `userId` no coincide con el token, o el DEV no está asignado, llega `task_move_error`.
+
 ## Endpoints principales
 
 ### Auth
