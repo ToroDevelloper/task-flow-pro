@@ -9,7 +9,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const frontendOrigins = (
-    process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174'
+    process.env.FRONTEND_ORIGIN ??
+    'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174'
   )
     .split(',')
     .map((origin) => origin.trim())
@@ -43,7 +44,7 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('🚀 TaskFlow Pro API')
+    .setTitle('🚀 Toro Angel TaskFlow Pro API')
     .setDescription(
       'API completa para gestión de tareas y proyectos con autenticación segura.\n\n' +
         '## Características\n' +
@@ -117,7 +118,7 @@ async function bootstrap() {
     ],
   });
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   console.log(`\n✅ Servidor ejecutándose en: http://localhost:${port}`);
   console.log(`📚 Swagger disponible en:    http://localhost:${port}/docs\n`);

@@ -44,6 +44,9 @@ lerna-debug.log*
 .env.production.local
 .env.local
 
+# local certificates
+certs/*.pem
+
 # temp directory
 .temp
 .tmp
