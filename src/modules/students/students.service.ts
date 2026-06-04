@@ -4,6 +4,11 @@ import { Repository } from 'typeorm';
 import { CreateStudentDto } from '../../dtos/dto-students/create-student.dto';
 import { Student } from './student.entity';
 
+export type StudentResponse = Pick<
+  Student,
+  'id' | 'nombre' | 'apellido' | 'codigo'
+>;
+
 @Injectable()
 export class StudentsService {
   constructor(
@@ -11,7 +16,7 @@ export class StudentsService {
     private readonly studentsRepository: Repository<Student>,
   ) {}
 
-  async crear(dto: CreateStudentDto): Promise<Student> {
+  async crear(dto: CreateStudentDto): Promise<StudentResponse> {
     const existente = await this.studentsRepository.findOne({
       where: { codigo: dto.codigo },
     });
@@ -23,12 +28,23 @@ export class StudentsService {
     }
 
     const student = this.studentsRepository.create(dto);
-    return await this.studentsRepository.save(student);
+    return this.toResponse(await this.studentsRepository.save(student));
   }
 
-  async obtenerTodos(): Promise<Student[]> {
-    return await this.studentsRepository.find({
+  async obtenerTodos(): Promise<StudentResponse[]> {
+    const students = await this.studentsRepository.find({
       order: { fechaCreacion: 'DESC' },
     });
+
+    return students.map((student) => this.toResponse(student));
+  }
+
+  private toResponse(student: Student): StudentResponse {
+    return {
+      id: student.id,
+      nombre: student.nombre,
+      apellido: student.apellido,
+      codigo: student.codigo,
+    };
   }
 }
