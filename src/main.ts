@@ -118,7 +118,7 @@ async function bootstrap() {
     ],
   });
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   console.log(`\n✅ Servidor ejecutándose en: http://localhost:${port}`);
   console.log(`📚 Swagger disponible en:    http://localhost:${port}/docs\n`);
