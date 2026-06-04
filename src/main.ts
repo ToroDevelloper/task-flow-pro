@@ -8,16 +8,8 @@ import { RolesService } from './modules/roles/roles.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const frontendOrigins = (
-    process.env.FRONTEND_ORIGIN ??
-    'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174'
-  )
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-
   app.enableCors({
-    origin: frontendOrigins,
+    origin: true,
     credentials: true,
   });
 
@@ -42,8 +34,9 @@ async function bootstrap() {
   // CONFIGURACIÓN SWAGGER
   // ══════════════════════════════════════════════════════════════
   const port = process.env.PORT ?? 3000;
+  const publicApiUrl = process.env.PUBLIC_API_URL?.trim();
 
-  const swaggerConfig = new DocumentBuilder()
+  const swaggerBuilder = new DocumentBuilder()
     .setTitle('🚀 Toro Angel TaskFlow Pro API')
     .setDescription(
       'API completa para gestión de tareas y proyectos con autenticación segura.\n\n' +
@@ -85,8 +78,7 @@ async function bootstrap() {
       'support@taskflowpro.com',
     )
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
-    .addServer(`http://localhost:${port}`, 'Desarrollo')
-    .addServer('https://api.taskflowpro.com', 'Producción')
+    .addServer('/', 'Servidor actual')
     .addBearerAuth(
       {
         type: 'http',
@@ -95,8 +87,13 @@ async function bootstrap() {
         description: 'Ingresa el JWT token obtenido en `POST /auth/login`',
       },
       'Bearer',
-    )
-    .build();
+    );
+
+  if (publicApiUrl) {
+    swaggerBuilder.addServer(publicApiUrl, 'Producción');
+  }
+
+  const swaggerConfig = swaggerBuilder.build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document, {
