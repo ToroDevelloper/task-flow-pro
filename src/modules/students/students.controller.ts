@@ -8,7 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { CreateStudentDto } from '../../dtos/dto-students/create-student.dto';
 import { Student } from './student.entity';
-import { StudentsService } from './students.service';
+import { StudentResponse, StudentsService } from './students.service';
 
 @ApiTags('Estudiantes')
 @Controller('estudiantes')
@@ -28,7 +28,7 @@ export class StudentsController {
   })
   @Post()
   @HttpCode(201)
-  async crear(@Body() dto: CreateStudentDto): Promise<Student> {
+  async crear(@Body() dto: CreateStudentDto): Promise<StudentResponse> {
     return await this.studentsService.crear(dto);
   }
 
@@ -41,7 +41,7 @@ export class StudentsController {
     type: [Student],
   })
   @Get()
-  async obtenerTodos(): Promise<Student[]> {
+  async obtenerTodos(): Promise<StudentResponse[]> {
     return await this.studentsService.obtenerTodos();
   }
 }
