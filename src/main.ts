@@ -8,16 +8,8 @@ import { RolesService } from './modules/roles/roles.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const frontendOrigins = (
-    process.env.FRONTEND_ORIGIN ??
-    'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174'
-  )
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-
   app.enableCors({
-    origin: frontendOrigins,
+    origin: true,
     credentials: true,
   });
 
